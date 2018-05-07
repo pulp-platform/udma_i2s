@@ -56,37 +56,37 @@ module udma_i2s_2ch
     output logic                      cfg_ready_o,
     output logic               [31:0] cfg_data_o,
 
-    output logic [L2_AWIDTH_NOAL-1:0] cfg_rx_ch0_startaddr_o,
-    output logic     [TRANS_SIZE-1:0] cfg_rx_ch0_size_o,
-    output logic                [1:0] cfg_rx_ch0_datasize_o,
-    output logic                      cfg_rx_ch0_continuous_o,
-    output logic                      cfg_rx_ch0_en_o,
-    output logic                      cfg_rx_ch0_clr_o,
-    input  logic                      cfg_rx_ch0_en_i,
-    input  logic                      cfg_rx_ch0_pending_i,
-    input  logic [L2_AWIDTH_NOAL-1:0] cfg_rx_ch0_curr_addr_i,
-    input  logic     [TRANS_SIZE-1:0] cfg_rx_ch0_bytes_left_i,
+    output logic [L2_AWIDTH_NOAL-1:0] cfg_rx_startaddr_o,
+    output logic     [TRANS_SIZE-1:0] cfg_rx_size_o,
+    output logic                      cfg_rx_continuous_o,
+    output logic                      cfg_rx_en_o,
+    output logic                      cfg_rx_clr_o,
+    input  logic                      cfg_rx_en_i,
+    input  logic                      cfg_rx_pending_i,
+    input  logic [L2_AWIDTH_NOAL-1:0] cfg_rx_curr_addr_i,
+    input  logic     [TRANS_SIZE-1:0] cfg_rx_bytes_left_i,
 
-    output logic [L2_AWIDTH_NOAL-1:0] cfg_rx_ch1_startaddr_o,
-    output logic     [TRANS_SIZE-1:0] cfg_rx_ch1_size_o,
-    output logic                [1:0] cfg_rx_ch1_datasize_o,
-    output logic                      cfg_rx_ch1_continuous_o,
-    output logic                      cfg_rx_ch1_en_o,
-    output logic                      cfg_rx_ch1_clr_o,
-    input  logic                      cfg_rx_ch1_en_i,
-    input  logic                      cfg_rx_ch1_pending_i,
-    input  logic [L2_AWIDTH_NOAL-1:0] cfg_rx_ch1_curr_addr_i,
-    input  logic     [TRANS_SIZE-1:0] cfg_rx_ch1_bytes_left_i,
+    output logic [L2_AWIDTH_NOAL-1:0] cfg_tx_startaddr_o,
+    output logic     [TRANS_SIZE-1:0] cfg_tx_size_o,
+    output logic                      cfg_tx_continuous_o,
+    output logic                      cfg_tx_en_o,
+    output logic                      cfg_tx_clr_o,
+    input  logic                      cfg_tx_en_i,
+    input  logic                      cfg_tx_pending_i,
+    input  logic [L2_AWIDTH_NOAL-1:0] cfg_tx_curr_addr_i,
+    input  logic     [TRANS_SIZE-1:0] cfg_tx_bytes_left_i,
 
-    output logic                [1:0] data_rx_ch0_datasize_o,
-    output logic               [31:0] data_rx_ch0_o,
-    output logic                      data_rx_ch0_valid_o,
-    input  logic                      data_rx_ch0_ready_i,
+    output logic                [1:0] data_rx_datasize_o,
+    output logic               [31:0] data_rx_o,
+    output logic                      data_rx_valid_o,
+    input  logic                      data_rx_ready_i,
 
-    output logic                [1:0] data_rx_ch1_datasize_o,
-    output logic               [31:0] data_rx_ch1_o,
-    output logic                      data_rx_ch1_valid_o,
-    input  logic                      data_rx_ch1_ready_i
+    output logic                      data_tx_req_o,
+    input  logic                      data_tx_gnt_i,
+    output logic                [1:0] data_tx_datasize_o,
+    input  logic               [31:0] data_tx_i,
+    input  logic                      data_tx_valid_i,
+    output logic                      data_tx_ready_o            
 
 );
 
@@ -120,12 +120,10 @@ module udma_i2s_2ch
 
     logic                       [1:0] s_ext_sd;
 
-    assign data_rx_ch0_o       = s_fifo_data[0];
-    assign data_rx_ch1_o       = s_fifo_data[1];
-    assign data_rx_ch0_valid_o = s_fifo_valid[0];
-    assign data_rx_ch1_valid_o = s_fifo_valid[1];
-    assign s_fifo_ready[0]     = data_rx_ch0_ready_i;
-    assign s_fifo_ready[1]     = data_rx_ch1_ready_i;
+    assign data_rx_o       = s_fifo_data[0];
+    assign data_rx_valid_o = s_fifo_valid[0];
+    assign s_fifo_ready[0]     = data_rx_ready_i;
+    assign s_fifo_ready[1]     = 1'b1;
 
     assign s_ext_sd[0]         = ext_sd0_i;
     assign s_ext_sd[1]         = ext_sd1_i;
@@ -148,27 +146,27 @@ module udma_i2s_2ch
         .cfg_ready_o            ( cfg_ready_o             ),
         .cfg_data_o             ( cfg_data_o              ),
 
-        .cfg_rx_ch0_startaddr_o ( cfg_rx_ch0_startaddr_o  ),
-        .cfg_rx_ch0_size_o      ( cfg_rx_ch0_size_o       ),
-        .cfg_rx_ch0_datasize_o  ( data_rx_ch0_datasize_o  ),
-        .cfg_rx_ch0_continuous_o( cfg_rx_ch0_continuous_o ),
-        .cfg_rx_ch0_en_o        ( cfg_rx_ch0_en_o         ),
-        .cfg_rx_ch0_clr_o       ( cfg_rx_ch0_clr_o        ),
-        .cfg_rx_ch0_en_i        ( cfg_rx_ch0_en_i         ),
-        .cfg_rx_ch0_pending_i   ( cfg_rx_ch0_pending_i    ),
-        .cfg_rx_ch0_curr_addr_i ( cfg_rx_ch0_curr_addr_i  ),
-        .cfg_rx_ch0_bytes_left_i( cfg_rx_ch0_bytes_left_i ),
+        .cfg_rx_ch0_startaddr_o ( cfg_rx_startaddr_o  ),
+        .cfg_rx_ch0_size_o      ( cfg_rx_size_o       ),
+        .cfg_rx_ch0_datasize_o  ( data_rx_datasize_o  ),
+        .cfg_rx_ch0_continuous_o( cfg_rx_continuous_o ),
+        .cfg_rx_ch0_en_o        ( cfg_rx_en_o         ),
+        .cfg_rx_ch0_clr_o       ( cfg_rx_clr_o        ),
+        .cfg_rx_ch0_en_i        ( cfg_rx_en_i         ),
+        .cfg_rx_ch0_pending_i   ( cfg_rx_pending_i    ),
+        .cfg_rx_ch0_curr_addr_i ( cfg_rx_curr_addr_i  ),
+        .cfg_rx_ch0_bytes_left_i( cfg_rx_bytes_left_i ),
 
-        .cfg_rx_ch1_startaddr_o ( cfg_rx_ch1_startaddr_o  ),
-        .cfg_rx_ch1_size_o      ( cfg_rx_ch1_size_o       ),
-        .cfg_rx_ch1_datasize_o  ( data_rx_ch1_datasize_o  ),
-        .cfg_rx_ch1_continuous_o( cfg_rx_ch1_continuous_o ),
-        .cfg_rx_ch1_en_o        ( cfg_rx_ch1_en_o         ),
-        .cfg_rx_ch1_clr_o       ( cfg_rx_ch1_clr_o        ),
-        .cfg_rx_ch1_en_i        ( cfg_rx_ch1_en_i         ),
-        .cfg_rx_ch1_pending_i   ( cfg_rx_ch1_pending_i    ),
-        .cfg_rx_ch1_curr_addr_i ( cfg_rx_ch1_curr_addr_i  ),
-        .cfg_rx_ch1_bytes_left_i( cfg_rx_ch1_bytes_left_i ),
+        .cfg_rx_ch1_startaddr_o ( cfg_tx_startaddr_o  ),
+        .cfg_rx_ch1_size_o      ( cfg_tx_size_o       ),
+        .cfg_rx_ch1_datasize_o  ( data_tx_datasize_o  ),
+        .cfg_rx_ch1_continuous_o( cfg_tx_continuous_o ),
+        .cfg_rx_ch1_en_o        ( cfg_tx_en_o         ),
+        .cfg_rx_ch1_clr_o       ( cfg_tx_clr_o        ),
+        .cfg_rx_ch1_en_i        ( cfg_tx_en_i         ),
+        .cfg_rx_ch1_pending_i   ( cfg_tx_pending_i    ),
+        .cfg_rx_ch1_curr_addr_i ( cfg_tx_curr_addr_i  ),
+        .cfg_rx_ch1_bytes_left_i( cfg_tx_bytes_left_i ),
 
         .cfg_i2s_ch_mode_o      ( s_cfg_ch_mode           ),
         .cfg_i2s_snap_cam_o     ( s_cfg_snap_cam          ),
@@ -190,6 +188,38 @@ module udma_i2s_2ch
         .cfg_i2s_1_gen_clk_div_o( s_cfg1_gen_clk_div      ),
         .cfg_i2s_1_bits_word_o  ( s_cfg1_bits_word        )
     );
+
+    io_tx_fifo #(
+      .DATA_WIDTH(32),
+      .BUFFER_DEPTH(2)
+      ) u_fifo (
+        .clk_i   ( sys_clk_i       ),
+        .rstn_i  ( rstn_i          ),
+        .clr_i   ( 1'b0            ),
+        .data_o  ( s_data_tx       ),
+        .valid_o ( s_data_tx_valid ),
+        .ready_i ( s_data_tx_ready ),
+        .req_o   ( data_tx_req_o   ),
+        .gnt_i   ( data_tx_gnt_i   ),
+        .valid_i ( data_tx_valid_i ),
+        .data_i  ( data_tx_i       ),
+        .ready_o ( data_tx_ready_o )
+    );
+
+    udma_dc_fifo #(32,4) u_dc_fifo_tx
+    (
+        .src_clk_i    ( sys_clk_i          ),  
+        .src_rstn_i   ( rstn_i             ),  
+        .src_data_i   ( s_data_tx          ),
+        .src_valid_i  ( s_data_tx_valid    ),
+        .src_ready_o  ( s_data_tx_ready    ),
+        .dst_clk_i    ( periph_clk_i       ),
+        .dst_rstn_i   ( rstn_i             ),
+        .dst_data_o   ( s_data_tx_dc       ),
+        .dst_valid_o  ( s_data_tx_dc_valid ),
+        .dst_ready_i  ( s_data_tx_dc_ready )
+    );
+
 
     udma_i2s_multich #(
         .NUM_CHANNELS(NUM_CHANNELS),
