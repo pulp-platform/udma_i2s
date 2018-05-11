@@ -118,6 +118,14 @@ module udma_i2s_2ch
     logic   [NUM_CHANNELS-1:0]        s_fifo_valid;
     logic   [NUM_CHANNELS-1:0]        s_fifo_ready;
 
+    logic                      [31:0] s_data_tx;
+    logic                             s_data_tx_valid;
+    logic                             s_data_tx_ready;
+
+    logic                      [31:0] s_data_tx_dc;
+    logic                             s_data_tx_dc_valid;
+    logic                             s_data_tx_dc_ready;
+
     logic                       [1:0] s_ext_sd;
 
     assign data_rx_o       = s_fifo_data[0];
