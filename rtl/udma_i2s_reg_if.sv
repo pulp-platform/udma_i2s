@@ -38,8 +38,7 @@
 
 module udma_i2s_reg_if #(
     parameter L2_AWIDTH_NOAL = 12,
-    parameter TRANS_SIZE     = 16,
-    parameter NUM_CHANNELS   = 4
+    parameter TRANS_SIZE     = 16
 )
 (
 	input  logic 	                  clk_i,
@@ -74,25 +73,30 @@ module udma_i2s_reg_if #(
     input  logic [L2_AWIDTH_NOAL-1:0] cfg_rx_ch1_curr_addr_i,
     input  logic     [TRANS_SIZE-1:0] cfg_rx_ch1_bytes_left_i,
 
-    output logic [NUM_CHANNELS-1:0]  [1:0] cfg_i2s_ch_mode_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_snap_cam_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_useddr_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_update_o,
-    output logic [NUM_CHANNELS-1:0]  [9:0] cfg_i2s_decimation_o,
-    output logic [NUM_CHANNELS-1:0]  [2:0] cfg_i2s_shift_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_pdm_en_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_pdm_usefilter_o,
-    output logic [NUM_CHANNELS-1:0]        cfg_i2s_lsb_first_o,
 
-    output logic                [4:0] cfg_i2s_ext_bits_word_o,
-    output logic                      cfg_i2s_0_gen_clk_en_o,
-    input  logic                      cfg_i2s_0_gen_clk_en_i,
-    output logic               [15:0] cfg_i2s_0_gen_clk_div_o,
-    output logic                [4:0] cfg_i2s_0_bits_word_o,
-    output logic                      cfg_i2s_1_gen_clk_en_o,
-    input  logic                      cfg_i2s_1_gen_clk_en_i,
-    output logic               [15:0] cfg_i2s_1_gen_clk_div_o,
-    output logic                [4:0] cfg_i2s_1_bits_word_o
+    output logic                [1:0] cfg_slave_mode_o,
+
+    output logic                [1:0] cfg_slave_i2s_mode_o,
+    output logic                      cfg_slave_i2s_lsb_first_o,
+    output logic                [4:0] cfg_slave_i2s_bits_word_o,
+    output logic                [2:0] cfg_slave_i2s_words_o,
+
+    output logic                [1:0] cfg_slave_pdm_mode_o,
+    output logic                [9:0] cfg_slave_pdm_decimation_o,
+    output logic                [2:0] cfg_slave_pdm_shift_o,
+
+    output logic                [1:0] cfg_master_i2s_mode_o,
+    output logic                      cfg_master_i2s_lsb_first_o,
+    output logic                [4:0] cfg_master_i2s_bits_word_o,
+    output logic                [2:0] cfg_master_i2s_words_o,
+
+    output logic                      cfg_slave_gen_clk_en_o,
+    input  logic                      cfg_slave_gen_clk_en_i,
+    output logic               [15:0] cfg_slave_gen_clk_div_o,
+
+    output logic                      cfg_master_gen_clk_en_o,
+    input  logic                      cfg_master_gen_clk_en_i,
+    output logic               [15:0] cfg_master_gen_clk_div_o
 
 );
 
@@ -112,24 +116,27 @@ module udma_i2s_reg_if #(
     logic                      r_rx_ch1_en;
     logic                      r_rx_ch1_clr;
 
-    logic [MAX_CHANNELS-1:0]  [1:0] r_i2s_ch_mode;
-    logic [MAX_CHANNELS-1:0]        r_i2s_snap_cam;
-    logic [MAX_CHANNELS-1:0]        r_i2s_useddr;
-    logic [MAX_CHANNELS-1:0]        r_i2s_update;
-    logic [MAX_CHANNELS-1:0]  [9:0] r_i2s_decimation;
-    logic [MAX_CHANNELS-1:0]  [2:0] r_i2s_shift;
-    logic [MAX_CHANNELS-1:0]        r_i2s_pdm_en;
-    logic [MAX_CHANNELS-1:0]        r_i2s_pdm_usefilter;
-    logic [MAX_CHANNELS-1:0]        r_i2s_lsb_first;
+    logic                [1:0] r_slave_mode;
 
-    logic  [4:0] r_i2s_ext_bits_word;
-    logic        r_i2s_cfg0_clk_en;
-    logic [15:0] r_i2s_cfg0_clk_div;
-    logic  [4:0] r_i2s_cfg0_bits_word;
-    logic        r_i2s_cfg1_clk_en;
-    logic [15:0] r_i2s_cfg1_clk_div;
-    logic  [4:0] r_i2s_cfg1_bits_word;
+    logic                [1:0] r_slave_i2s_mode;
+    logic                      r_slave_i2s_lsb_first;
+    logic                [4:0] r_slave_i2s_bits_word;
+    logic                [2:0] r_slave_i2s_words;
 
+    logic                [1:0] r_slave_pdm_mode;
+    logic                [9:0] r_slave_pdm_decimation;
+    logic                [2:0] r_slave_pdm_shift;
+
+    logic                [1:0] r_master_i2s_mode;
+    logic                      r_master_i2s_lsb_first;
+    logic                [4:0] r_master_i2s_bits_word;
+    logic                [2:0] r_master_i2s_words;
+
+    logic                      r_slave_gen_clk_en;
+    logic               [15:0] r_slave_gen_clk_div;
+
+    logic                      r_master_gen_clk_en;
+    logic               [15:0] r_master_gen_clk_div;
 
     logic                [4:0] s_wr_addr;
     logic                [4:0] s_rd_addr;
@@ -151,62 +158,61 @@ module udma_i2s_reg_if #(
     assign cfg_rx_ch1_en_o         = r_rx_ch1_en;
     assign cfg_rx_ch1_clr_o        = r_rx_ch1_clr;
 
-    always_comb begin : proc_outs
-        for (int i=0;i<NUM_CHANNELS;i++)
-        begin
-            cfg_i2s_ch_mode_o[i]        = r_i2s_ch_mode[i];
-            cfg_i2s_useddr_o[i]         = r_i2s_useddr[i];
-            cfg_i2s_update_o[i]         = r_i2s_update[i];
-            cfg_i2s_decimation_o[i]     = r_i2s_decimation[i];
-            cfg_i2s_shift_o[i]          = r_i2s_shift[i];
-            cfg_i2s_pdm_en_o[i]         = r_i2s_pdm_en[i];
-            cfg_i2s_pdm_usefilter_o[i]  = r_i2s_pdm_usefilter[i];
-            cfg_i2s_snap_cam_o[i]       = r_i2s_snap_cam[i];
-            cfg_i2s_lsb_first_o[i]      = r_i2s_lsb_first[i];
-        end
-    end
+    assign cfg_slave_mode_o            = r_slave_mode;
 
-    assign cfg_i2s_ext_bits_word_o  = r_i2s_ext_bits_word;
-    assign cfg_i2s_0_gen_clk_en_o   = r_i2s_cfg0_clk_en;
-    assign cfg_i2s_0_gen_clk_div_o  = r_i2s_cfg0_clk_div;
-    assign cfg_i2s_0_bits_word_o    = r_i2s_cfg0_bits_word;
-    assign cfg_i2s_1_gen_clk_en_o   = r_i2s_cfg1_clk_en;
-    assign cfg_i2s_1_gen_clk_div_o  = r_i2s_cfg1_clk_div; 
-    assign cfg_i2s_1_bits_word_o    = r_i2s_cfg1_bits_word;
+    assign cfg_slave_i2s_mode_o        = r_slave_i2s_mode;
+    assign cfg_slave_i2s_lsb_first_o   = r_slave_i2s_lsb_first;
+    assign cfg_slave_i2s_bits_word_o   = r_slave_i2s_bits_word;
+    assign cfg_slave_i2s_words_o       = r_slave_i2s_words;
+
+    assign cfg_slave_pdm_mode_o        = r_slave_pdm_mode;
+    assign cfg_slave_pdm_decimation_o  = r_slave_pdm_decimation;
+    assign cfg_slave_pdm_shift_o       = r_slave_pdm_shift;
+
+    assign cfg_master_i2s_mode_o       = r_master_i2s_mode;
+    assign cfg_master_i2s_lsb_first_o  = r_master_i2s_lsb_first;
+    assign cfg_master_i2s_bits_word_o  = r_master_i2s_bits_word;
+    assign cfg_master_i2s_words_o      = r_master_i2s_words;
+
+    assign cfg_slave_gen_clk_en_o      = r_slave_gen_clk_en;
+    assign cfg_slave_gen_clk_div_o     = r_slave_gen_clk_div;
+
+    assign cfg_master_gen_clk_en_o     = r_master_gen_clk_en;
+    assign cfg_master_gen_clk_div_o    = r_master_gen_clk_div;
 
     always_ff @(posedge clk_i, negedge rstn_i) 
     begin
         if(~rstn_i) 
         begin
             // SPI REGS
-            r_rx_ch0_startaddr   <=  'h0;
-            r_rx_ch0_size        <=  'h0;
-            r_rx_ch0_datasize    <=  'h2;
-            r_rx_ch0_continuous  <=  'h0;
-            r_rx_ch0_en           =  'h0;
-            r_rx_ch0_clr          =  'h0;
-            r_rx_ch1_startaddr   <=  'h0;
-            r_rx_ch1_size        <=  'h0;
-            r_rx_ch1_datasize    <=  'h2;
-            r_rx_ch1_continuous  <=  'h0;
-            r_rx_ch1_en           =  'h0;
-            r_rx_ch1_clr          =  'h0;
-            r_i2s_ch_mode        <=  'h0;
-            r_i2s_useddr         <=  'h0;
-            r_i2s_update          =  'h0;
-            r_i2s_decimation     <=  'h0;
-            r_i2s_shift          <=  'h0;
-            r_i2s_pdm_en         <=  'h0;
-            r_i2s_pdm_usefilter  <=  'h0;
-            r_i2s_snap_cam       <=  'h0;
-            r_i2s_lsb_first      <=  'h0;
-            r_i2s_ext_bits_word  <=  'h0;
-            r_i2s_cfg0_clk_en    <=  'h0;
-            r_i2s_cfg0_clk_div   <=  'h0;
-            r_i2s_cfg0_bits_word <=  'h0;
-            r_i2s_cfg1_clk_en    <=  'h0;
-            r_i2s_cfg1_clk_div   <=  'h0;
-            r_i2s_cfg1_bits_word <=  'h0;
+            r_rx_ch0_startaddr     <= 'h0;
+            r_rx_ch0_size          <= 'h0;
+            r_rx_ch0_datasize      <= 'h2;
+            r_rx_ch0_continuous    <= 'h0;
+            r_rx_ch0_en             = 'h0;
+            r_rx_ch0_clr            = 'h0;
+            r_rx_ch1_startaddr     <= 'h0;
+            r_rx_ch1_size          <= 'h0;
+            r_rx_ch1_datasize      <= 'h2;
+            r_rx_ch1_continuous    <= 'h0;
+            r_rx_ch1_en             = 'h0;
+            r_rx_ch1_clr            = 'h0;
+            r_slave_mode           <= 'h0;
+            r_slave_i2s_mode       <= 'h0;
+            r_slave_i2s_lsb_first  <= 'h0;
+            r_slave_i2s_bits_word  <= 'h0;
+            r_slave_i2s_words      <= 'h0;
+            r_slave_pdm_mode       <= 'h0;
+            r_slave_pdm_decimation <= 'h0;
+            r_slave_pdm_shift      <= 'h0;
+            r_master_i2s_mode      <= 'h0;
+            r_master_i2s_lsb_first <= 'h0;
+            r_master_i2s_bits_word <= 'h0;
+            r_master_i2s_words     <= 'h0;
+            r_slave_gen_clk_en     <= 'h0;
+            r_slave_gen_clk_div    <= 'h0;
+            r_master_gen_clk_en    <= 'h0;
+            r_master_gen_clk_div   <= 'h0;
         end
         else
         begin
@@ -214,8 +220,6 @@ module udma_i2s_reg_if #(
             r_rx_ch0_clr         =  'h0;
             r_rx_ch1_en          =  'h0;
             r_rx_ch1_clr         =  'h0;
-            r_i2s_update[0]      = 1'b0;
-            r_i2s_update[1]      = 1'b0;
 
             if (cfg_valid_i & ~cfg_rwn_i)
             begin
@@ -242,64 +246,6 @@ module udma_i2s_reg_if #(
                     r_rx_ch1_datasize    <= cfg_data_i[2:1];
                     r_rx_ch1_continuous  <= cfg_data_i[0];
                 end
-                `REG_I2S_CHMODE:
-                begin
-                    r_i2s_ch_mode[0]       <= cfg_data_i[25:24];
-                    r_i2s_useddr[0]        <= cfg_data_i[16];
-                    r_i2s_pdm_en[0]        <= cfg_data_i[12];
-                    r_i2s_pdm_usefilter[0] <= cfg_data_i[8];
-                    r_i2s_lsb_first[0]     <= cfg_data_i[4];
-                    r_i2s_snap_cam[0]      <= cfg_data_i[0];
-                    r_i2s_ch_mode[1]       <= cfg_data_i[27:26];
-                    r_i2s_useddr[1]        <= cfg_data_i[17];
-                    r_i2s_pdm_en[1]        <= cfg_data_i[13];
-                    r_i2s_pdm_usefilter[1] <= cfg_data_i[9];
-                    r_i2s_lsb_first[1]     <= cfg_data_i[5];
-                    r_i2s_snap_cam[1]      <= cfg_data_i[1];
-                    r_i2s_ch_mode[2]       <= cfg_data_i[29:28];
-                    r_i2s_useddr[2]        <= cfg_data_i[18];
-                    r_i2s_pdm_en[2]        <= cfg_data_i[14];
-                    r_i2s_pdm_usefilter[2] <= cfg_data_i[10];
-                    r_i2s_lsb_first[2]     <= cfg_data_i[6];
-                    r_i2s_snap_cam[2]      <= cfg_data_i[2];
-                    r_i2s_ch_mode[3]       <= cfg_data_i[31:30];
-                    r_i2s_useddr[3]        <= cfg_data_i[19];
-                    r_i2s_pdm_en[3]        <= cfg_data_i[15];
-                    r_i2s_pdm_usefilter[3] <= cfg_data_i[11];
-                    r_i2s_lsb_first[3]     <= cfg_data_i[7];
-                    r_i2s_snap_cam[3]      <= cfg_data_i[3];
-                end
-
-                `REG_I2S_FILT_CH0:
-                begin
-                    r_i2s_update[0]       = 1'b1;
-                    r_i2s_decimation[0]  <= cfg_data_i[9:0];
-                    r_i2s_shift[0]       <= cfg_data_i[18:16];
-                end
-
-                `REG_I2S_FILT_CH1:
-                begin
-                    r_i2s_update[1]       = 1'b1;
-                    r_i2s_decimation[1]  <= cfg_data_i[9:0];
-                    r_i2s_shift[1]       <= cfg_data_i[18:16];
-                end
-
-                `REG_I2S_EXT_SETUP:
-                begin
-                    r_i2s_ext_bits_word     <= cfg_data_i[4:0];
-                end
-                `REG_I2S_CFG0_SETUP:
-                begin
-                    r_i2s_cfg0_clk_en    <= cfg_data_i[8];
-                    r_i2s_cfg0_clk_div   <= cfg_data_i[31:16];
-                    r_i2s_cfg0_bits_word <= cfg_data_i[4:0];
-                end
-                `REG_I2S_CFG1_SETUP:
-                begin
-                    r_i2s_cfg1_clk_en    <= cfg_data_i[8];
-                    r_i2s_cfg1_clk_div   <= cfg_data_i[31:16];
-                    r_i2s_cfg1_bits_word <= cfg_data_i[4:0];
-                end
                 endcase
             end
         end
@@ -321,18 +267,6 @@ module udma_i2s_reg_if #(
             cfg_data_o[TRANS_SIZE-1:0] = cfg_rx_ch1_bytes_left_i;
         `REG_RX_CH1_CFG:
             cfg_data_o = {26'h0,cfg_rx_ch1_pending_i,cfg_rx_ch1_en_i,1'b0,r_rx_ch1_datasize,r_rx_ch1_continuous};
-        `REG_I2S_CHMODE:
-            cfg_data_o = {r_i2s_ch_mode,4'h0,r_i2s_useddr,r_i2s_pdm_en,r_i2s_pdm_usefilter,r_i2s_lsb_first,r_i2s_snap_cam};
-        `REG_I2S_FILT_CH0:
-            cfg_data_o = {13'h0, r_i2s_shift[0], 6'h0, r_i2s_decimation[0]};
-        `REG_I2S_FILT_CH1:
-            cfg_data_o = {13'h0, r_i2s_shift[1], 6'h0, r_i2s_decimation[1]};
-        `REG_I2S_EXT_SETUP:
-            cfg_data_o = {27'h0,r_i2s_ext_bits_word};
-        `REG_I2S_CFG0_SETUP:
-            cfg_data_o = {r_i2s_cfg0_clk_div, 7'h0, cfg_i2s_0_gen_clk_en_i, 3'h0, r_i2s_cfg0_bits_word};
-        `REG_I2S_CFG1_SETUP:
-            cfg_data_o = {r_i2s_cfg1_clk_div, 7'h0, cfg_i2s_1_gen_clk_en_i, 3'h0, r_i2s_cfg1_bits_word};
         default:
             cfg_data_o = 'h0;
         endcase
