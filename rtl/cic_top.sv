@@ -31,6 +31,7 @@ module varcic #(
   input  logic             rstn_i,
 
   input  logic             cfg_update_i,
+  input  logic  [1:0]      cfg_ch_num_i,
 
   input  logic  [9:0]      cfg_decimation_i,
   input  logic  [2:0]      cfg_shift_i,
@@ -50,6 +51,7 @@ logic [ACC_WIDTH-1:0] comb_data [0:STAGES];
 //                               control
 //------------------------------------------------------------------------------
 logic [9:0] r_sample_nr;
+logic [1:0] r_ch_nr;
 
 
 always_ff @(posedge clk_i or negedge rstn_i)
@@ -57,32 +59,34 @@ begin
   if(~rstn_i)
   begin
     r_sample_nr  <=  'h0;
-    data_valid_o <= 1'b0;
+    r_ch_nr      <=  'h0;
   end
   else
   begin
     if (cfg_update_i)
     begin
-          r_sample_nr  <= 0;
-          data_valid_o <= 0;      
+      r_sample_nr  <= 0;
+      r_ch_nr      <= 0;
     end
     else if (data_valid_i)
+    begin
+      if(r_ch_nr == cfg_ch_num_i)
       begin
+        r_ch_nr <= 'h0;
         if (r_sample_nr == cfg_decimation_i)
-        begin
           r_sample_nr  <= 0;
-          data_valid_o <= 1;
-        end
         else
-        begin
           r_sample_nr  <= r_sample_nr + 1;
-          data_valid_o <= 0;
-        end
       end
-    else
-      data_valid_o <= 0;
+      else
+        r_ch_nr <= r_ch_nr + 1;
+      end
   end
 end
+
+logic  s_out_data_valid;
+assign s_out_data_valid = (r_sample_nr == cfg_decimation_i);
+assign data_valid_o     = s_out_data_valid;
 
 
 //------------------------------------------------------------------------------
@@ -100,6 +104,7 @@ generate
       .clk_i(clk_i),
       .rstn_i(rstn_i),
       .clr_i(cfg_update_i),
+      .sel_i(r_ch_nr),
       .en_i(data_valid_i),
       .data_i(integrator_data[i]),
       .data_o(integrator_data[i+1])
@@ -109,7 +114,8 @@ generate
       .clk_i(clk_i),
       .rstn_i(rstn_i),
       .clr_i(cfg_update_i),
-      .en_i(data_valid_o),
+      .sel_i(r_ch_nr),
+      .en_i(s_out_data_valid),
       .data_i(comb_data[i]),
       .data_o(comb_data[i+1])
       );

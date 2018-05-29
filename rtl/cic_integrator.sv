@@ -26,23 +26,40 @@ module cic_integrator #(
 	input  logic en_i,
 	input  logic clr_i,
 
+	input  logic [1:0] sel_i,
+
 	input  logic [WIDTH-1:0] data_i,
 	output logic [WIDTH-1:0] data_o
 );
 
-	logic [WIDTH-1:0] r_accumulator;
+	logic [WIDTH-1:0] [3:0] r_accumulator;
+	logic [WIDTH-1:0]       s_sum;
+	logic [WIDTH-1:0]       s_mux;
 
-	assign data_o = r_accumulator;
+	assign s_mux = r_accumulator[sel_i];
+	assign s_sum = s_mux + data_i;
 
 	always_ff @(posedge clk_i or negedge rstn_i)
 	begin
 		if (~rstn_i)
-			r_accumulator <= 'h0;
+		begin
+			r_accumulator[0] <= 'h0;
+			r_accumulator[1] <= 'h0;
+			r_accumulator[2] <= 'h0;
+			r_accumulator[3] <= 'h0;
+		end
 		else
+		begin
 			if (clr_i)
-				r_accumulator <= 'h0;
+			begin
+				r_accumulator[0] <= 'h0;
+				r_accumulator[1] <= 'h0;
+				r_accumulator[2] <= 'h0;
+				r_accumulator[3] <= 'h0;
+			end
   			else if (en_i) 
-  				r_accumulator <= r_accumulator + data_i;
+  				r_accumulator[sel_i] <= s_sum;
+  		end
 	end
 
 endmodule

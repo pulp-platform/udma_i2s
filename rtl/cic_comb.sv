@@ -27,31 +27,49 @@ module cic_comb #(
 	input  logic en_i,
 	input  logic clr_i,
 
+	input  logic [1:0] sel_i,
+
 	input  logic [WIDTH-1:0] data_i,
 	output logic [WIDTH-1:0] data_o
 );
 
 
-	logic [WIDTH-1:0] r_previousdata;
+	logic [WIDTH-1:0] [3:0] r_previousdata;
+	logic [WIDTH-1:0] [3:0] r_data;
+	logic [WIDTH-1:0]       s_sum;
+
+	assign s_sum = data_i - r_previousdata[sel_i];
 
 	always_ff @(posedge clk_i or negedge rstn_i)
 	begin
 		if (~rstn_i)
 		begin
-			r_previousdata <= 'h0;
-			data_o         <= 'h0;
+			r_previousdata[0] <= 'h0;
+			r_previousdata[1] <= 'h0;
+			r_previousdata[2] <= 'h0;
+			r_previousdata[3] <= 'h0;
+			r_data[0]         <= 'h0;
+			r_data[1]         <= 'h0;
+			r_data[2]         <= 'h0;
+			r_data[3]         <= 'h0;
 		end
 		else
 		begin
 			if (clr_i)
 			begin
-				r_previousdata <= 'h0;
-				data_o         <= 'h0;
-			end
+				r_previousdata[0] <= 'h0;
+				r_previousdata[1] <= 'h0;
+				r_previousdata[2] <= 'h0;
+				r_previousdata[3] <= 'h0;
+				r_data[0]         <= 'h0;
+				r_data[1]         <= 'h0;
+				r_data[2]         <= 'h0;
+				r_data[3]         <= 'h0;
+				end
   			else if (en_i) 
     		begin
-    			data_o <= data_i - r_previousdata;
-    			r_previousdata <= data_i;
+    			r_data[sel_i]     <= s_sum;
+    			r_previousdata[sel_i] <= data_i;
     		end
     	end
     end

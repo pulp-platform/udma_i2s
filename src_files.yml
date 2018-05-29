@@ -6,8 +6,8 @@ udma_i2s:
     rtl/cic_top.sv,
     rtl/cic_integrator.sv,
     rtl/cic_comb.sv,
-    rtl/udma_i2s_multich.sv,
-    rtl/udma_i2s_2ch.sv,
+    rtl/pdm_top.sv,
     rtl/udma_i2s_reg_if.sv,
+    rtl/udma_i2s_top.sv,
   ]
 
