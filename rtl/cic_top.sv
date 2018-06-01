@@ -30,7 +30,7 @@ module varcic #(
   input  logic             clk_i,
   input  logic             rstn_i,
 
-  input  logic             cfg_update_i,
+  input  logic             cfg_en_i,
   input  logic  [1:0]      cfg_ch_num_i,
 
   input  logic  [9:0]      cfg_decimation_i,
@@ -52,7 +52,18 @@ logic [ACC_WIDTH-1:0] comb_data [0:STAGES];
 //------------------------------------------------------------------------------
 logic [9:0] r_sample_nr;
 logic [1:0] r_ch_nr;
+logic       r_en;
+logic       s_clr;
 
+assign s_clr = cfg_en_i & !r_en;
+
+always_ff @(posedge clk_i or negedge rstn_i)
+begin
+  if(~rstn_i)
+    r_en <= 'h0;
+  else
+    r_en <= cfg_en_i;
+end
 
 always_ff @(posedge clk_i or negedge rstn_i)
 begin
@@ -63,7 +74,7 @@ begin
   end
   else
   begin
-    if (cfg_update_i)
+    if (s_clr)
     begin
       r_sample_nr  <= 0;
       r_ch_nr      <= 0;
@@ -103,7 +114,7 @@ generate
     cic_integrator #(ACC_WIDTH) cic_integrator_inst(
       .clk_i(clk_i),
       .rstn_i(rstn_i),
-      .clr_i(cfg_update_i),
+      .clr_i(s_clr),
       .sel_i(r_ch_nr),
       .en_i(data_valid_i),
       .data_i(integrator_data[i]),
@@ -113,7 +124,7 @@ generate
     cic_comb #(ACC_WIDTH) cic_comb_inst(
       .clk_i(clk_i),
       .rstn_i(rstn_i),
-      .clr_i(cfg_update_i),
+      .clr_i(s_clr),
       .sel_i(r_ch_nr),
       .en_i(s_out_data_valid),
       .data_i(comb_data[i]),

@@ -129,15 +129,30 @@ module udma_i2s_top
     logic                      s_data_tx_valid;
     logic                      s_data_tx_ready;
 
+    logic               [31:0] s_data_rx_dc;
+    logic                      s_data_rx_dc_valid;
+    logic                      s_data_rx_dc_ready;
+
     logic               [31:0] s_data_tx_dc;
     logic                      s_data_tx_dc_valid;
     logic                      s_data_tx_dc_ready;
+
+
+    logic                [4:0] s_cfg_word_size_0;
+    logic                [2:0] s_cfg_word_num_0;
+    logic                [4:0] s_cfg_word_size_1;
+    logic                [2:0] s_cfg_word_num_1;
+    logic                      s_sel_master_num;
+    logic                      s_sel_master_ext;
+    logic                      s_sel_slave_num;
+    logic                      s_sel_slave_ext;
 
     udma_i2s_reg_if #(
         .L2_AWIDTH_NOAL(L2_AWIDTH_NOAL),
         .TRANS_SIZE(TRANS_SIZE)
     ) u_reg_if (
         .clk_i                  ( sys_clk_i           ),
+        .periph_clk_i           ( periph_clk_i        ),
         .rstn_i                 ( rstn_i              ),
 
         .cfg_data_i             ( cfg_data_i          ),
@@ -147,41 +162,50 @@ module udma_i2s_top
         .cfg_ready_o            ( cfg_ready_o         ),
         .cfg_data_o             ( cfg_data_o          ),
 
-        .cfg_rx_ch0_startaddr_o ( cfg_rx_startaddr_o  ),
-        .cfg_rx_ch0_size_o      ( cfg_rx_size_o       ),
-        .cfg_rx_ch0_datasize_o  ( data_rx_datasize_o  ),
-        .cfg_rx_ch0_continuous_o( cfg_rx_continuous_o ),
-        .cfg_rx_ch0_en_o        ( cfg_rx_en_o         ),
-        .cfg_rx_ch0_clr_o       ( cfg_rx_clr_o        ),
-        .cfg_rx_ch0_en_i        ( cfg_rx_en_i         ),
-        .cfg_rx_ch0_pending_i   ( cfg_rx_pending_i    ),
-        .cfg_rx_ch0_curr_addr_i ( cfg_rx_curr_addr_i  ),
-        .cfg_rx_ch0_bytes_left_i( cfg_rx_bytes_left_i ),
+        .cfg_rx_startaddr_o ( cfg_rx_startaddr_o  ),
+        .cfg_rx_size_o      ( cfg_rx_size_o       ),
+        .cfg_rx_datasize_o  ( data_rx_datasize_o  ),
+        .cfg_rx_continuous_o( cfg_rx_continuous_o ),
+        .cfg_rx_en_o        ( cfg_rx_en_o         ),
+        .cfg_rx_clr_o       ( cfg_rx_clr_o        ),
+        .cfg_rx_en_i        ( cfg_rx_en_i         ),
+        .cfg_rx_pending_i   ( cfg_rx_pending_i    ),
+        .cfg_rx_curr_addr_i ( cfg_rx_curr_addr_i  ),
+        .cfg_rx_bytes_left_i( cfg_rx_bytes_left_i ),
 
-        .cfg_rx_ch1_startaddr_o ( cfg_tx_startaddr_o  ),
-        .cfg_rx_ch1_size_o      ( cfg_tx_size_o       ),
-        .cfg_rx_ch1_datasize_o  ( data_tx_datasize_o  ),
-        .cfg_rx_ch1_continuous_o( cfg_tx_continuous_o ),
-        .cfg_rx_ch1_en_o        ( cfg_tx_en_o         ),
-        .cfg_rx_ch1_clr_o       ( cfg_tx_clr_o        ),
-        .cfg_rx_ch1_en_i        ( cfg_tx_en_i         ),
-        .cfg_rx_ch1_pending_i   ( cfg_tx_pending_i    ),
-        .cfg_rx_ch1_curr_addr_i ( cfg_tx_curr_addr_i  ),
-        .cfg_rx_ch1_bytes_left_i( cfg_tx_bytes_left_i ),
+        .cfg_tx_startaddr_o ( cfg_tx_startaddr_o  ),
+        .cfg_tx_size_o      ( cfg_tx_size_o       ),
+        .cfg_tx_datasize_o  ( data_tx_datasize_o  ),
+        .cfg_tx_continuous_o( cfg_tx_continuous_o ),
+        .cfg_tx_en_o        ( cfg_tx_en_o         ),
+        .cfg_tx_clr_o       ( cfg_tx_clr_o        ),
+        .cfg_tx_en_i        ( cfg_tx_en_i         ),
+        .cfg_tx_pending_i   ( cfg_tx_pending_i    ),
+        .cfg_tx_curr_addr_i ( cfg_tx_curr_addr_i  ),
+        .cfg_tx_bytes_left_i( cfg_tx_bytes_left_i ),
 
-        .cfg_slave_mode_o          ( s_slave_mode           ),
+        .cfg_master_clk_en_o ( s_master_clk_en ),
+        .cfg_slave_clk_en_o  ( s_slave_clk_en  ), 
 
-        .cfg_slave_i2s_mode_o      ( s_slave_i2s_mode       ),
+        .cfg_master_sel_num_o  ( s_sel_master_num     ),
+        .cfg_master_sel_ext_o  ( s_sel_master_ext     ),
+        .cfg_slave_sel_num_o   ( s_sel_slave_num      ),
+        .cfg_slave_sel_ext_o   ( s_sel_slave_ext      ),
+
+        .cfg_slave_i2s_en_o        ( s_slave_i2s_en         ),
         .cfg_slave_i2s_lsb_first_o ( s_slave_i2s_lsb_first  ),
+        .cfg_slave_i2s_2ch_o       ( s_slave_i2s_2ch        ),
         .cfg_slave_i2s_bits_word_o ( s_slave_i2s_bits_word  ),
         .cfg_slave_i2s_words_o     ( s_slave_i2s_words      ),
 
+        .cfg_slave_pdm_en_o        ( s_slave_pdm_en         ),
         .cfg_slave_pdm_mode_o      ( s_slave_pdm_mode       ),
         .cfg_slave_pdm_decimation_o( s_slave_pdm_decimation ),
         .cfg_slave_pdm_shift_o     ( s_slave_pdm_shift      ),
 
-        .cfg_master_i2s_mode_o     ( s_master_i2s_mode      ),
+        .cfg_master_i2s_en_o       ( s_master_i2s_en        ),
         .cfg_master_i2s_lsb_first_o( s_master_i2s_lsb_first ),
+        .cfg_master_i2s_2ch_o      ( s_master_i2s_2ch       ),
         .cfg_master_i2s_bits_word_o( s_master_i2s_bits_word ),
         .cfg_master_i2s_words_o    ( s_master_i2s_words     ),
 
@@ -218,18 +242,16 @@ module udma_i2s_top
         .src_data_i   ( s_data_tx          ),
         .src_valid_i  ( s_data_tx_valid    ),
         .src_ready_o  ( s_data_tx_ready    ),
-        .dst_clk_i    ( periph_clk_i       ),
+        .dst_clk_i    ( s_i2s_master_clk   ),
         .dst_rstn_i   ( rstn_i             ),
         .dst_data_o   ( s_data_tx_dc       ),
         .dst_valid_o  ( s_data_tx_dc_valid ),
         .dst_ready_i  ( s_data_tx_dc_ready )
     );
 
-    assign s_data_tx_dc_ready = 1'b1;
-
     udma_dc_fifo #(32,4) u_dc_fifo_rx
     (
-        .src_clk_i    ( periph_clk_i       ),  
+        .src_clk_i    ( s_i2s_slave_clk    ),  
         .src_rstn_i   ( rstn_i             ),  
         .src_data_i   ( s_data_rx_dc       ),
         .src_valid_i  ( s_data_rx_dc_valid ),
@@ -241,67 +263,96 @@ module udma_i2s_top
         .dst_ready_i  ( data_rx_ready_i    )
     );
  
-    assign s_data_rx_dc = 'h0;
-    assign s_data_rx_dc_valid = 'h0;
+    i2s_clkws_gen i_clkws_gen (
+
+        .clk_i             ( periph_clk_i         ),
+        .rstn_i            ( rstn_i               ),
+
+        .dft_test_mode_i   ( dft_test_mode_i      ),
+        .dft_cg_enable_i   ( dft_cg_enable_i      ),
+
+        .master_en_i       ( s_master_clk_en      ),
+        .slave_en_i        ( s_slave_clk_en       ),
+
+        .pad_slave_sck_i   ( pad_slave_sck_i      ),
+        .pad_slave_sck_o   ( pad_slave_sck_o      ),
+        .pad_slave_sck_oe  ( pad_slave_sck_oe     ),
+        .pad_slave_ws_i    ( pad_slave_ws_i       ),
+        .pad_slave_ws_o    ( pad_slave_ws_o       ),
+        .pad_slave_ws_oe   ( pad_slave_ws_oe      ),
+        .pad_master_sck_i  ( pad_master_sck_i     ),
+        .pad_master_sck_o  ( pad_master_sck_o     ),
+        .pad_master_sck_oe ( pad_master_sck_oe    ),
+        .pad_master_ws_i   ( pad_master_ws_i      ),
+        .pad_master_ws_o   ( pad_master_ws_o      ),
+        .pad_master_ws_oe  ( pad_master_ws_oe     ),
+
+        .cfg_div_1_i       ( s_slave_gen_clk_div  ),
+        .cfg_div_0_i       ( s_master_gen_clk_div ),
+
+        .cfg_word_size_0_i ( s_master_i2s_bits_word ),
+        .cfg_word_num_0_i  ( s_master_i2s_words     ),
+        .cfg_word_size_1_i ( s_slave_i2s_bits_word ),
+        .cfg_word_num_1_i  ( s_slave_i2s_words     ),
+
+        .sel_master_num_i  ( s_sel_master_num     ),
+        .sel_master_ext_i  ( s_sel_master_ext     ),
+        .sel_slave_num_i   ( s_sel_slave_num      ),
+        .sel_slave_ext_i   ( s_sel_slave_ext      ),
+
+        .clk_master_o      ( s_i2s_master_clk     ),
+        .ws_master_o       ( s_i2s_master_ws      ),
+        .clk_slave_o       ( s_i2s_slave_clk      ),
+        .ws_slave_o        ( s_i2s_slave_ws       )
+    );
 
     
-    // i2s_txrx #(
-    //     .NUM_CHANNELS(NUM_CHANNELS),
-    //     .BUFFER_WIDTH(4)
-    // ) i_i2s_txrx (
-    //     .sys_clk_i           ( sys_clk_i            ),
-    //     .periph_clk_i        ( periph_clk_i         ),
-    //     .rstn_i              ( rstn_i               ),
+    i2s_txrx i_i2s_txrx (
 
-    //     .dft_test_mode_i ( dft_test_mode_i ),
-    //     .dft_cg_enable_i ( dft_cg_enable_i ),
+        .rstn_i                     ( rstn_i                 ),
 
-    //     .pad_slave_sd0_i   ( pad_slave_sd0_i   ),
-    //     .pad_slave_sd1_i   ( pad_slave_sd1_i   ),
-    //     .pad_slave_sck_i   ( pad_slave_sck_i   ),
-    //     .pad_slave_sck_o   ( pad_slave_sck_o   ),
-    //     .pad_slave_sck_oe  ( pad_slave_sck_oe  ),
-    //     .pad_slave_ws_i    ( pad_slave_ws_i    ),
-    //     .pad_slave_ws_o    ( pad_slave_ws_o    ),
-    //     .pad_slave_ws_oe   ( pad_slave_ws_oe   ),
+        .dft_test_mode_i            ( dft_test_mode_i        ),
+        .dft_cg_enable_i            ( dft_cg_enable_i        ),
 
-    //     .pad_master_sd0_o  ( pad_master_sd0_o  ),
-    //     .pad_master_sd1_o  ( pad_master_sd1_o  ),
-    //     .pad_master_sck_i  ( pad_master_sck_i  ),
-    //     .pad_master_sck_o  ( pad_master_sck_o  ),
-    //     .pad_master_sck_oe ( pad_master_sck_oe ),
-    //     .pad_master_ws_i   ( pad_master_ws_i   ),
-    //     .pad_master_ws_o   ( pad_master_ws_o   ),
-    //     .pad_master_ws_oe  ( pad_master_ws_oe  ),
+        .slave_clk_i                ( s_i2s_slave_clk        ),
+        .slave_ws_i                 ( s_i2s_slave_ws         ),
 
-    //     .cfg_pdm_ch_mode_i    ( s_cfg_ch_mode        ),
-    //     .cfg_pdm_decimation_i ( s_cfg_pdm_decimation ),
-    //     .cfg_pdm_shift_i      ( s_cfg_pdm_shift      ),
-    //     .cfg_pdm_en_i         ( s_cfg_pdm_en         ),
+        .master_clk_i               ( s_i2s_master_clk       ),
+        .master_ws_i                ( s_i2s_master_ws        ),
 
-    //     .cfg_i2s_slv_ch_mode_i ( s_cfg_ch_mode ),
-    //     .cfg_i2s_slv_lsb_i     (  ),
-    //     .cfg_i2s_slv_wlen_i    (  ),
-    //     .cfg_i2s_slv_wnum_i    (  ),
-    //     .cfg_i2s_slv_en_i      (  ),
+        .pad_slave_sd0_i            ( pad_slave_sd0_i        ),
+        .pad_slave_sd1_i            ( pad_slave_sd1_i        ),
 
-    //     .cfg_i2s_mst_ch_mode_i ( s_cfg_ch_mode ),
-    //     .cfg_i2s_mst_lsb_i     (  ),
-    //     .cfg_i2s_mst_wlen_i    (  ),
-    //     .cfg_i2s_mst_wnum_i    (  ),
-    //     .cfg_i2s_mst_en_i      (  ),
+        .pad_master_sd0_o           ( pad_master_sd0_o       ),
+        .pad_master_sd1_o           ( pad_master_sd1_o       ),
 
-    //     .fifo_rx_data_o       ( s_fifo_rx_data   ),         
-    //     .fifo_rx_data_valid_o ( s_fifo_rx_valid  ),   
-    //     .fifo_rx_data_ready_i ( s_fifo_rx_ready  ),   
+        .cfg_slave_en_i             ( s_slave_i2s_en             ),
+        .cfg_master_en_i            ( s_master_i2s_en            ),
 
-    //     .fifo_tx_data_o       ( s_fifo_tx_data   ),         
-    //     .fifo_tx_data_valid_o ( s_fifo_tx_valid  ),   
-    //     .fifo_tx_data_ready_i ( s_fifo_tx_ready  ),   
+        .cfg_slave_pdm_en_i         ( s_slave_pdm_en         ),
+        .cfg_slave_pdm_mode_i       ( s_slave_pdm_mode       ),
+        .cfg_slave_pdm_decimation_i ( s_slave_pdm_decimation ),
+        .cfg_slave_pdm_shift_i      ( s_slave_pdm_shift      ),
 
-    //     .fifo_err_o          (                      ),
-    //     .fifo_err_clr_i      ( '0                   )
-    // );
+        .cfg_slave_i2s_lsb_first_i  ( s_slave_i2s_lsb_first  ),
+        .cfg_slave_i2s_2ch_i        ( s_slave_i2s_2ch        ),
+        .cfg_slave_i2s_bits_word_i  ( s_slave_i2s_bits_word  ),
+        .cfg_slave_i2s_words_i      ( s_slave_i2s_words      ),
+
+        .cfg_master_i2s_lsb_first_i ( s_master_i2s_lsb_first ),
+        .cfg_master_i2s_2ch_i       ( s_master_i2s_2ch       ),
+        .cfg_master_i2s_bits_word_i ( s_master_i2s_bits_word ),
+        .cfg_master_i2s_words_i     ( s_master_i2s_words     ),
+
+        .fifo_rx_data_o             ( s_data_rx_dc           ),         
+        .fifo_rx_data_valid_o       ( s_data_rx_dc_valid     ),   
+        .fifo_rx_data_ready_i       ( s_data_rx_dc_ready     ),   
+
+        .fifo_tx_data_i             ( s_data_tx_dc           ),         
+        .fifo_tx_data_valid_i       ( s_data_tx_dc_valid     ),   
+        .fifo_tx_data_ready_o       ( s_data_tx_dc_ready     )
+
+    );
 
 endmodule
 

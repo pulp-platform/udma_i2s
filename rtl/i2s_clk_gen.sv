@@ -20,16 +20,16 @@
 
 module i2s_clk_gen
 (
-    input  logic                    clk_i,
-    input  logic                    rstn_i,
+    input  logic         clk_i,
+    input  logic         rstn_i,
 
-    input  logic                    test_mode_i,
+    input  logic         test_mode_i,
 
-    output logic                    sck_o,
+    output logic         sck_o,
 
-    input  logic                    cfg_clk_en_i,
-    output logic                    cfg_clk_en_o,
-    input  logic              [15:0] cfg_semiperiod_cycles_i
+    input  logic         cfg_clk_en_i,
+    output logic         cfg_clk_en_o,
+    input  logic  [15:0] cfg_div_i
 );
 
     logic  [15:0] r_counter;
@@ -54,7 +54,7 @@ module i2s_clk_gen
             if (cfg_clk_en_i && !r_clock_en)
             begin
                 r_clock_en       <= 1'b1;
-                r_sampled_config <= cfg_semiperiod_cycles_i;
+                r_sampled_config <= cfg_div_i;
             end
             else if(!cfg_clk_en_i)
             begin
@@ -67,7 +67,7 @@ module i2s_clk_gen
                 begin
                     if(r_counter == r_sampled_config)
                     begin
-                        r_sampled_config <= cfg_semiperiod_cycles_i;
+                        r_sampled_config <= cfg_div_i;
                         r_counter <= 'h0;
                         r_clk     <= 'h0;
                     end
@@ -82,7 +82,7 @@ module i2s_clk_gen
                 if(r_counter == r_sampled_config)
                 begin
                     r_counter <= 'h0;
-                    r_sampled_config <= cfg_semiperiod_cycles_i;
+                    r_sampled_config <= cfg_div_i;
                     r_clk     <= ~r_clk;
                 end
                 else

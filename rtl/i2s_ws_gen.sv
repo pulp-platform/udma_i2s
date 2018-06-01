@@ -27,24 +27,33 @@ module i2s_ws_gen
 
     output logic                    ws_o,
 
-    input  logic              [4:0] cfg_data_size_i
+    input  logic              [4:0] cfg_data_size_i,
+    input  logic              [2:0] cfg_word_num_i
 );
 
     logic  [4:0] r_counter;
+    logic  [2:0] r_word_counter;
 
     //Generate the internal WS signal
     always_ff  @(posedge sck_i, negedge rstn_i)
     begin
         if (rstn_i == 1'b0)
         begin
-            r_counter  <= 'h0;
+            r_counter      <= 'h0;
+            r_word_counter <= 'h0;
         end
         else
         begin
             if (cfg_ws_en_i)
             begin
                 if(r_counter == cfg_data_size_i)
+                begin
                     r_counter <= 'h0;
+                    if(r_word_counter == cfg_word_num_i)
+                        r_word_counter <= 'h0;
+                    else
+                        r_word_counter <= r_word_counter + 1;
+                end
                 else
                     r_counter <= r_counter + 1;
             end
@@ -62,7 +71,7 @@ module i2s_ws_gen
         begin
             if (cfg_ws_en_i)
             begin
-                if(r_counter == cfg_data_size_i)
+                if( (r_counter == cfg_data_size_i) && (r_word_counter == cfg_word_num_i))
                     ws_o <= ~ws_o;
             end
         end

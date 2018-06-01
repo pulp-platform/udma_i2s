@@ -36,9 +36,8 @@ module i2s_rx_channel (
 
     output logic                    fifo_err_o,
 
-    input  logic                    cfg_update_i, 
     input  logic                    cfg_en_i, 
-    input  logic              [1:0] cfg_ch_mode_i, 
+    input  logic                    cfg_2ch_i, 
     input  logic              [4:0] cfg_wlen_i, 
     input  logic              [2:0] cfg_wnum_i, 
     input  logic                    cfg_lsb_first_i
@@ -61,10 +60,14 @@ module i2s_rx_channel (
     logic        r_word_done_dly;
     logic        s_word_done;
 
+    logic        r_started;
+
+    assign s_ws_edge = r_ws_sync[1] ^ r_ws_sync[0]; 
+
     assign s_word_done = r_count_bit == cfg_wlen_i;
 
     assign fifo_data_o = s_word_done ? s_shiftreg_ch0 : (r_word_done_dly ? r_shiftreg_shadow : 32'h0);
-    assign fifo_data_valid_o = s_word_done | r_word_done_dly;
+    assign fifo_data_valid_o = s_word_done | (cfg_2ch_i & r_word_done_dly);
     assign fifo_err_o = fifo_data_valid_o & ~fifo_data_ready_i;
 
     always_comb begin : proc_shiftreg
@@ -93,10 +96,16 @@ module i2s_rx_channel (
         end
         else
         begin
-            r_shiftreg_ch0  <= s_shiftreg_ch0;
-            r_shiftreg_ch1  <= s_shiftreg_ch1;  
-            if(s_word_done)
-                r_shiftreg_shadow <= s_shiftreg_ch1;          
+            if(r_started)
+            begin
+                r_shiftreg_ch0  <= s_shiftreg_ch0;
+                if(cfg_2ch_i)
+                begin
+                    r_shiftreg_ch1  <= s_shiftreg_ch1;  
+                    if(s_word_done)
+                        r_shiftreg_shadow <= s_shiftreg_ch1;          
+                end
+            end
         end
     end
 
@@ -108,10 +117,13 @@ module i2s_rx_channel (
         end
         else
         begin
-            if (s_word_done)
-                r_count_bit <= 'h0;
-            else 
-                r_count_bit <= r_count_bit + 1;
+            if(r_started)
+            begin
+                if (s_word_done)
+                    r_count_bit <= 'h0;
+                else 
+                    r_count_bit <= r_count_bit + 1;
+            end
         end
     end
 
@@ -123,10 +135,30 @@ module i2s_rx_channel (
         end
         else
         begin
-            r_word_done_dly <= s_word_done;
+            if(r_started)
+                r_word_done_dly <= s_word_done;
         end
     end
 
+    always_ff  @(negedge sck_i, negedge rstn_i)
+    begin
+        if (rstn_i == 1'b0)
+        begin
+            r_ws_sync <= 'h0;
+            r_started <= 'h0;
+        end
+        else
+        begin
+            r_ws_sync <= {r_ws_sync[0],i2s_ws_i};
+            if(s_ws_edge)
+            begin
+                if(cfg_en_i)
+                    r_started <= 1'b1;
+                else
+                    r_started <= 1'b0;
+            end
+        end
+    end
 
 endmodule
 

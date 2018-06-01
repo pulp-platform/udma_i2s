@@ -6,16 +6,15 @@
 module pdm_top (
 	input  logic          clk_i,
 	input  logic          rstn_i,
-    input  logic          cfg_update_i,
     input  logic  [1:0]   cfg_pdm_ch_mode_i,
     input  logic  [9:0]   cfg_pdm_decimation_i,
     input  logic  [2:0]   cfg_pdm_shift_i,
     input  logic          cfg_pdm_en_i,
 	input  logic          pdm_ch0_i,
 	input  logic          pdm_ch1_i,
-	output logic          pdm_clk_o,
 	output logic   [15:0] pcm_data_o,
-	output logic          pcm_data_valid_o
+	output logic          pcm_data_valid_o,
+	input  logic          pcm_data_ready_i
 );
 
 	logic [1:0] r_ch_nr;
@@ -35,16 +34,16 @@ module pdm_top (
   		.STAGES(5),
   		.ACC_WIDTH(51)
 	) i_varcic (
-  		.clk_i            ( clk_i            ),
-  		.rstn_i           ( rstn_i           ),
-  		.cfg_update_i     ( cfg_update_i     ),
-  		.cfg_ch_num_i     ( s_ch_target      ),
+  		.clk_i            ( clk_i                ),
+  		.rstn_i           ( rstn_i               ),
+  		.cfg_en_i         ( cfg_pdm_en_i         ),
+  		.cfg_ch_num_i     ( s_ch_target          ),
   		.cfg_decimation_i ( cfg_pdm_decimation_i ),
   		.cfg_shift_i      ( cfg_pdm_shift_i      ),
-  		.data_i           ( s_data           ),
-  		.data_valid_i     ( s_data_valid     ),
-  		.data_o           ( pcm_data_o       ),
-  		.data_valid_o     ( pcm_data_valid_o )
+  		.data_i           ( s_data               ),
+  		.data_valid_i     ( s_data_valid         ),
+  		.data_o           ( pcm_data_o           ),
+  		.data_valid_o     ( pcm_data_valid_o     )
 	);
 
 	always_comb begin : proc_s_ch_target
@@ -76,6 +75,10 @@ module pdm_top (
 	    		else if((r_ch_nr == 2 ) || s_target_reached)
         			r_clk <= 1'b0;
         	end
+        	else
+        	begin
+        		r_clk <= 1'b0;
+        	end
 	  	end
 	end
 
@@ -87,10 +90,14 @@ module pdm_top (
 	  	begin
 	  		if(cfg_pdm_en_i)
 	  		begin
-		    	if ((cfg_update_i) || s_target_reached)
+		    	if (s_target_reached)
 		      		r_ch_nr      <= 0;
 	    		else 
         			r_ch_nr <= r_ch_nr + 1;
+        	end
+        	else
+        	begin
+        		r_ch_nr <= 0;
         	end
 	  	end
 	end
@@ -102,6 +109,8 @@ module pdm_top (
 	  	else
 	  		if(cfg_pdm_en_i)
 		    	r_ch_nr_dly      <=  r_ch_nr;
+		    else
+		    	r_ch_nr_dly  <= 'h0;
 	end
 
 	always_ff @(posedge clk_i or negedge rstn_i) begin : proc_r_store
@@ -131,6 +140,14 @@ module pdm_top (
 					r_store_ch3 <= pdm_ch1_i;
 				end
 			end	
+			else
+			begin
+				r_store_ch0 <= 0;
+				r_store_ch1 <= 0;
+				r_store_ch2 <= 0;
+				r_store_ch3 <= 0;
+				r_valid     <= 0;
+			end
 		end
 	end
 
