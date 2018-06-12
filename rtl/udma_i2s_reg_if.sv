@@ -76,6 +76,8 @@ module udma_i2s_reg_if #(
     output logic                      cfg_master_clk_en_o,
     output logic                      cfg_slave_clk_en_o,
 
+    output logic                      cfg_pdm_clk_en_o,
+
     output logic                      cfg_master_sel_num_o,
     output logic                      cfg_master_sel_ext_o,
     output logic                      cfg_slave_sel_num_o,
@@ -162,6 +164,9 @@ module udma_i2s_reg_if #(
     logic                [7:0] r_per_slave_gen_clk_div;
     logic                [7:0] r_per_master_gen_clk_div;
 
+    logic                      r_pdm_clk_en;
+    logic                      r_per_pdm_clk_en;
+
     logic                [4:0] s_wr_addr;
     logic                [4:0] s_rd_addr;
 
@@ -216,6 +221,8 @@ module udma_i2s_reg_if #(
     assign cfg_master_clk_en_o = r_per_master_clk_en;
     assign cfg_slave_clk_en_o  = r_per_slave_clk_en;
 
+    assign cfg_pdm_clk_en_o = r_pdm_clk_en; 
+
     edge_propagator i_edgeprop (
         .clk_tx_i  ( clk_i  ),
         .rstn_tx_i ( rstn_i ),
@@ -231,6 +238,7 @@ module udma_i2s_reg_if #(
         begin
             r_per_master_clk_en  <= 'h0;
             r_per_slave_clk_en   <= 'h0;
+            r_per_pdm_clk_en     <= 'h0;
             r_per_master_sel_num <= 'h0;
             r_per_master_sel_ext <= 'h0;
             r_per_slave_sel_num  <= 'h0;
@@ -243,6 +251,7 @@ module udma_i2s_reg_if #(
         begin
             if(s_update)
             begin
+                r_per_pdm_clk_en     <= r_pdm_clk_en;
                 r_per_master_clk_en  <= r_master_clk_en;
                 r_per_slave_clk_en   <= r_slave_clk_en;
                 r_per_master_sel_num <= r_master_sel_num;
@@ -287,6 +296,7 @@ module udma_i2s_reg_if #(
             r_slave_sel_num        <= 'h0;
             r_slave_sel_ext        <= 'h0;
             r_master_clk_en        <= 'h0;
+            r_pdm_clk_en           <= 'h0;
             r_slave_clk_en         <= 'h0;
             r_slave_i2s_en         <= 'h0;
             r_slave_i2s_lsb_first  <= 'h0;
@@ -344,6 +354,7 @@ module udma_i2s_reg_if #(
                     r_master_sel_ext       <= cfg_data_i[30];
                     r_slave_sel_num        <= cfg_data_i[29];
                     r_slave_sel_ext        <= cfg_data_i[28];
+                    r_pdm_clk_en           <= cfg_data_i[26];
                     r_master_clk_en        <= cfg_data_i[25];
                     r_slave_clk_en         <= cfg_data_i[24];
                     r_common_gen_clk_div   <= cfg_data_i[23:16];
@@ -408,6 +419,9 @@ module udma_i2s_reg_if #(
                             r_master_sel_ext,
                             r_slave_sel_num,
                             r_slave_sel_ext,
+                            2'b00,
+                            r_master_clk_en,
+                            r_slave_clk_en,
                             r_common_gen_clk_div,
                             r_slave_gen_clk_div,
                             r_master_gen_clk_div };

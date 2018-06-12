@@ -20,6 +20,9 @@ module i2s_clkws_gen (
 
     input  logic        master_en_i,
     input  logic        slave_en_i,
+    input  logic        pdm_en_i,
+
+    input  logic        pdm_clk_i,
 
 	input  logic [15:0] cfg_div_0_i,
 	input  logic [15:0] cfg_div_1_i,
@@ -66,7 +69,7 @@ module i2s_clkws_gen (
 	logic s_ws_slave;
 
 	assign pad_slave_sck_oe = ~sel_slave_ext_i;
-	assign pad_slave_sck_o  = s_clk_slave;
+	//assign pad_slave_sck_o  = s_clk_slave;
 	assign pad_slave_ws_oe  = ~sel_slave_ext_i;
 	assign pad_slave_ws_o   = s_ws_slave;
 
@@ -78,6 +81,13 @@ module i2s_clkws_gen (
 	assign s_clk_gen_0_en = (master_en_i | slave_en_i) & ((~sel_master_num_i & ~sel_master_ext_i) | (~sel_slave_num_i & ~sel_slave_ext_i));
 	assign s_clk_gen_1_en = (master_en_i | slave_en_i) & (( sel_master_num_i & ~sel_master_ext_i) | ( sel_slave_num_i & ~sel_slave_ext_i));
 
+    pulp_clock_mux2 i_clk_slave_out
+    (
+        .clk0_i(s_clk_slave),
+        .clk1_i(pdm_clk_i),
+        .clk_sel_i(pdm_en_i),
+        .clk_o(pad_slave_sck_o)
+    );
 
 	i2s_clk_gen i_clkgen0
 	(
@@ -143,7 +153,7 @@ module i2s_clkws_gen (
 
     pulp_clock_mux2 i_clock_slave 
     (
-    	.clk0_i(s_clk_int_slave),
+        .clk0_i(s_clk_int_slave),
         .clk1_i(s_clk_ext_slave),
         .clk_sel_i(sel_slave_ext_i),
         .clk_o(s_clk_slave)

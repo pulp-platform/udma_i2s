@@ -6,6 +6,7 @@
 module pdm_top (
 	input  logic          clk_i,
 	input  logic          rstn_i,
+	output logic          pdm_clk_o,
     input  logic  [1:0]   cfg_pdm_ch_mode_i,
     input  logic  [9:0]   cfg_pdm_decimation_i,
     input  logic  [2:0]   cfg_pdm_shift_i,
@@ -29,6 +30,8 @@ module pdm_top (
 	logic       r_store_ch3;
 	logic       r_valid;
 	logic       r_clk;
+
+	assign pdm_clk_o = r_clk;
 
 	varcic #( 
   		.STAGES(5),

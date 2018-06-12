@@ -32,12 +32,13 @@ module i2s_txrx (
     input  logic                      master_clk_i,
     input  logic                      master_ws_i,
 
+    output logic                      pad_pdm_clk_o,
+
     input  logic                      pad_slave_sd0_i,
     input  logic                      pad_slave_sd1_i,
 
     output logic                      pad_master_sd0_o,
     output logic                      pad_master_sd1_o,
-
 
     input  logic                      cfg_slave_en_i,
     input  logic                      cfg_master_en_i,
@@ -68,7 +69,7 @@ module i2s_txrx (
 
 );
 
-    logic [31:0] s_pdm_fifo_data;
+    logic [15:0] s_pdm_fifo_data;
     logic        s_pdm_fifo_data_valid;
     logic        s_pdm_fifo_data_ready;
 
@@ -80,10 +81,10 @@ module i2s_txrx (
 
     assign s_i2s_slv_en = cfg_slave_en_i & !cfg_slave_pdm_en_i;
 
-    assign fifo_rx_data_o       = cfg_slave_pdm_en_i ? s_pdm_fifo_data       : s_i2s_slv_fifo_data;
-    assign fifo_rx_data_valid_o = cfg_slave_pdm_en_i ? s_pdm_fifo_data_valid : s_i2s_slv_fifo_data_valid;
+    assign fifo_rx_data_o            = cfg_slave_pdm_en_i ? {16'h0,s_pdm_fifo_data} : s_i2s_slv_fifo_data;
+    assign fifo_rx_data_valid_o      = cfg_slave_pdm_en_i ? s_pdm_fifo_data_valid   : s_i2s_slv_fifo_data_valid;
     assign s_i2s_slv_fifo_data_ready = fifo_rx_data_ready_i;
-    assign s_pdm_fifo_data_ready = fifo_rx_data_ready_i;
+    assign s_pdm_fifo_data_ready     = fifo_rx_data_ready_i;
 
     i2s_rx_channel i_i2s_slave 
     (
@@ -110,6 +111,7 @@ module i2s_txrx (
     pdm_top i_pdm (
         .clk_i                ( slave_clk_i                ),
         .rstn_i               ( rstn_i                     ),
+        .pdm_clk_o            ( pad_pdm_clk_o              ),
         .cfg_pdm_ch_mode_i    ( cfg_slave_pdm_mode_i       ),
         .cfg_pdm_decimation_i ( cfg_slave_pdm_decimation_i ),
         .cfg_pdm_shift_i      ( cfg_slave_pdm_shift_i      ),
