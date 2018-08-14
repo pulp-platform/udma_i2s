@@ -258,7 +258,7 @@ module udma_i2s_multich
                 .fifo_data_ready_i(s_fifo_data_ready[i]),
 
                 .fifo_err_o(),
-                .fifo_err_clr_i(),
+                .fifo_err_clr_i('0),
                 .cfg_pdm_en_i(cfg_pdm_en_i[i]),
                 .cfg_pdm_usefilter_i(cfg_pdm_usefilter_i[i]),
                 .cfg_update_i(s_cfg_pdm_update[i]),
