@@ -117,7 +117,7 @@ module pdm_top (
 	        		if(r_store_ch0)
 	        		begin
 	        			r_data_ch0 <= pdm_ch0_i;
-	        			r_data_ch1 <= pdm_ch0_i;
+	        			r_data_ch1 <= pdm_ch1_i;
 	        		end
 	        		r_clk <= ~r_clk;
 	        	end
@@ -132,12 +132,12 @@ module pdm_top (
 	        		if(r_store_ch0)
 	        		begin
 	        			r_data_ch0 <= pdm_ch0_i;
-	        			r_data_ch1 <= pdm_ch0_i;
+	        			r_data_ch1 <= pdm_ch1_i;
 	        		end
 	        		if(r_store_ch2)
 	        		begin
 	        			r_data_ch2 <= pdm_ch0_i;
-	        			r_data_ch3 <= pdm_ch0_i;
+	        			r_data_ch3 <= pdm_ch1_i;
 	        		end
 	        		r_clk      <= ~r_clk_dly;
 	        		r_clk_dly  <= r_clk;
