@@ -34,9 +34,9 @@ module cic_comb #(
 );
 
 
-	logic [WIDTH-1:0] [3:0] r_previousdata;
-	logic [WIDTH-1:0] [3:0] r_data;
-	logic [WIDTH-1:0]       s_sum;
+	logic [3:0] [WIDTH-1:0] r_previousdata;
+	logic [3:0] [WIDTH-1:0] r_data;
+	logic       [WIDTH-1:0] s_sum;
 
 	assign s_sum = data_i - r_previousdata[sel_i];
 

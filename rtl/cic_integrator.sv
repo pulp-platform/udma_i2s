@@ -32,9 +32,9 @@ module cic_integrator #(
 	output logic [WIDTH-1:0] data_o
 );
 
-	logic [WIDTH-1:0] [3:0] r_accumulator;
-	logic [WIDTH-1:0]       s_sum;
-	logic [WIDTH-1:0]       s_mux;
+	logic [3:0] [WIDTH-1:0] r_accumulator;
+	logic       [WIDTH-1:0] s_sum;
+	logic       [WIDTH-1:0] s_mux;
 
 	assign s_mux = r_accumulator[sel_i];
 	assign s_sum = s_mux + data_i;

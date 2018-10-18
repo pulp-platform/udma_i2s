@@ -54,6 +54,19 @@ module pdm_top (
   		.data_o           ( pcm_data_o           ),
   		.data_valid_o     ( pcm_data_valid_o     )
 	);
+	always_comb begin : proc_s_ch_target
+		s_ch_target = 0;
+		case(cfg_pdm_ch_mode_i)
+			`PDM_MODE_1CH:
+				s_ch_target = 0;
+			`PDM_MODE_2CH_RF:
+				s_ch_target = 1;
+			`PDM_MODE_2CH_SEP:
+				s_ch_target = 1;
+			`PDM_MODE_4CH:
+				s_ch_target = 3;
+		endcase // cfg_pdm_ch_mode_i
+	end
 
 	always_ff @(posedge clk_i or negedge rstn_i) begin : proc_r_store
 		if(~rstn_i) begin
@@ -151,23 +164,19 @@ module pdm_top (
 	always_comb begin : proc_s_data
 		if(r_send_ch0)
 		begin
-				s_data = r_store_ch0;
-				s_ch_target = 2'b00;
+				s_data = r_data_ch0;
 		end
 		else if(r_send_ch1)
 		begin
-				s_data = r_store_ch1;
-				s_ch_target = 2'b01;
+				s_data = r_data_ch1;
 		end
 		else if(r_send_ch2)
 		begin
-				s_data = r_store_ch2;
-				s_ch_target = 2'b10;
+				s_data = r_data_ch2;
 		end
 		else
 		begin
-				s_data = r_store_ch3;
-				s_ch_target = 2'b11;
+				s_data = r_data_ch3;
 		end
 	end
 

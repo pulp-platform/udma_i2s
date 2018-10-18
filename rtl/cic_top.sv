@@ -96,7 +96,7 @@ begin
 end
 
 logic  s_out_data_valid;
-assign s_out_data_valid = (r_sample_nr == cfg_decimation_i);
+assign s_out_data_valid = data_valid_i & (r_sample_nr == cfg_decimation_i);
 assign data_valid_o     = s_out_data_valid;
 
 
