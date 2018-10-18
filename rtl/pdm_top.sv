@@ -18,18 +18,24 @@ module pdm_top (
 	input  logic          pcm_data_ready_i
 );
 
-	logic [1:0] r_ch_nr;
-	logic [1:0] r_ch_nr_dly;
 	logic [1:0] s_ch_target;
-	logic       s_target_reached;
 	logic       s_data;
 	logic       s_data_valid;
 	logic       r_store_ch0;
 	logic       r_store_ch1;
 	logic       r_store_ch2;
 	logic       r_store_ch3;
+	logic       r_send_ch0;
+	logic       r_send_ch1;
+	logic       r_send_ch2;
+	logic       r_send_ch3;
+	logic       r_data_ch0;
+	logic       r_data_ch1;
+	logic       r_data_ch2;
+	logic       r_data_ch3;
 	logic       r_valid;
 	logic       r_clk;
+	logic       r_clk_dly;
 
 	assign pdm_clk_o = r_clk;
 
@@ -49,124 +55,122 @@ module pdm_top (
   		.data_valid_o     ( pcm_data_valid_o     )
 	);
 
-	always_comb begin : proc_s_ch_target
-		s_ch_target = 0;
-		case(cfg_pdm_ch_mode_i)
-			`PDM_MODE_1CH:
-				s_ch_target = 0;
-			`PDM_MODE_2CH_RF:
-				s_ch_target = 1;
-			`PDM_MODE_2CH_SEP:
-				s_ch_target = 1;
-			`PDM_MODE_4CH:
-				s_ch_target = 3;
-		endcase // cfg_pdm_ch_mode_i
-	end
-
-	assign s_target_reached = (r_ch_nr == s_ch_target );
-
-	always_ff @(posedge clk_i or negedge rstn_i)
-	begin
-	  	if(~rstn_i)
-	    	r_clk      <=  1'b0;
-	  	else
-	  	begin
-	  		if(cfg_pdm_en_i)
-	  		begin
-	    		if (r_ch_nr == 0 )
-	      			r_clk <= 1'b1;
-	    		else if((r_ch_nr == 2 ) || s_target_reached)
-        			r_clk <= 1'b0;
-        	end
-        	else
-        	begin
-        		r_clk <= 1'b0;
-        	end
-	  	end
-	end
-
-	always_ff @(posedge clk_i or negedge rstn_i)
-	begin
-	  	if(~rstn_i)
-	    	r_ch_nr      <=  'h0;
-	  	else
-	  	begin
-	  		if(cfg_pdm_en_i)
-	  		begin
-		    	if (s_target_reached)
-		      		r_ch_nr      <= 0;
-	    		else 
-        			r_ch_nr <= r_ch_nr + 1;
-        	end
-        	else
-        	begin
-        		r_ch_nr <= 0;
-        	end
-	  	end
-	end
-
-	always_ff @(posedge clk_i or negedge rstn_i)
-	begin
-	  	if(~rstn_i)
-	    	r_ch_nr_dly      <=  'h0;
-	  	else
-	  		if(cfg_pdm_en_i)
-		    	r_ch_nr_dly      <=  r_ch_nr;
-		    else
-		    	r_ch_nr_dly  <= 'h0;
-	end
-
 	always_ff @(posedge clk_i or negedge rstn_i) begin : proc_r_store
 		if(~rstn_i) begin
-			r_store_ch0 <= 0;
+			r_store_ch0 <= 1;
 			r_store_ch1 <= 0;
 			r_store_ch2 <= 0;
 			r_store_ch3 <= 0;
-			r_valid     <= 0;
+			r_send_ch0  <= 0;
+			r_send_ch1  <= 0;
+			r_send_ch2  <= 0;
+			r_send_ch3  <= 0;
+			r_data_ch0  <= 0;
+			r_data_ch1  <= 0;
+			r_data_ch2  <= 0;
+			r_data_ch3  <= 0;
+			r_clk       <= 0;
+			r_clk_dly   <= 0;
 		end else begin
 	  		if(cfg_pdm_en_i)
 	  		begin
-				r_valid <= 1'b1;
-				if (r_ch_nr == 0)
-				begin
-					r_store_ch0 <= pdm_ch0_i;
-					r_store_ch1 <= pdm_ch1_i;
-				end
-				else if (r_ch_nr == 1)
-				begin
-					if(cfg_pdm_ch_mode_i == `PDM_MODE_2CH_RF)
-						r_store_ch1 <= pdm_ch0_i;
-				end
-				else if (r_ch_nr == 2)
-				begin
-					r_store_ch2 <= pdm_ch0_i;
-					r_store_ch3 <= pdm_ch1_i;
-				end
+
+	        case(cfg_pdm_ch_mode_i)
+	        	`PDM_MODE_1CH:
+	        	begin
+	        		r_store_ch0 <= ~r_store_ch0;
+	        		r_send_ch0  <= ~r_send_ch0;
+	        		if(r_store_ch0)
+	        			r_data_ch0 <= pdm_ch0_i;
+	        		r_clk <= ~r_clk;
+	        	end
+	        	`PDM_MODE_2CH_RF:
+	        	begin
+	        		r_store_ch0 <= ~r_store_ch0;
+	        		r_send_ch0  <= ~r_send_ch0;
+	        		r_store_ch1 <= ~r_store_ch1;
+	        		r_send_ch1  <=  r_send_ch0;
+	        		if(r_store_ch0)
+	        			r_data_ch0 <= pdm_ch0_i;
+	        		if(r_store_ch1)
+	        			r_data_ch1 <= pdm_ch0_i;
+	        		r_clk <= ~r_clk;
+	        	end
+	        	`PDM_MODE_2CH_SEP:
+	        	begin
+	        		r_store_ch0 <= ~r_store_ch0;
+	        		r_send_ch0  <= ~r_send_ch0;
+	        		r_send_ch1  <=  r_send_ch0;
+	        		if(r_store_ch0)
+	        		begin
+	        			r_data_ch0 <= pdm_ch0_i;
+	        			r_data_ch1 <= pdm_ch0_i;
+	        		end
+	        		r_clk <= ~r_clk;
+	        	end
+	        	`PDM_MODE_4CH:
+	        	begin
+	        		r_store_ch0 <=  r_clk_dly & ~r_clk;
+	        		r_store_ch2 <= ~r_clk_dly &  r_clk;
+	        		r_send_ch0 <= r_store_ch0;
+	        		r_send_ch1 <= r_send_ch0;
+	        		r_send_ch2 <= r_send_ch1;
+	        		r_send_ch3 <= r_send_ch2;
+	        		if(r_store_ch0)
+	        		begin
+	        			r_data_ch0 <= pdm_ch0_i;
+	        			r_data_ch1 <= pdm_ch0_i;
+	        		end
+	        		if(r_store_ch2)
+	        		begin
+	        			r_data_ch2 <= pdm_ch0_i;
+	        			r_data_ch3 <= pdm_ch0_i;
+	        		end
+	        		r_clk      <= ~r_clk_dly;
+	        		r_clk_dly  <= r_clk;
+
+	        	end
+	        endcase // cfg_pdm_ch_mode_i
 			end	
 			else
 			begin
-				r_store_ch0 <= 0;
+				r_store_ch0 <= 1'b1;
 				r_store_ch1 <= 0;
 				r_store_ch2 <= 0;
 				r_store_ch3 <= 0;
-				r_valid     <= 0;
+				r_send_ch0  <= 0;
+				r_send_ch1  <= 0;
+				r_send_ch2  <= 0;
+				r_send_ch3  <= 0;
+				r_clk       <= 0;
+				r_clk_dly   <= 0;
 			end
 		end
 	end
 
 	always_comb begin : proc_s_data
-		case(r_ch_nr_dly)
-			0:
+		if(r_send_ch0)
+		begin
 				s_data = r_store_ch0;
-			1:
+				s_ch_target = 2'b00;
+		end
+		else if(r_send_ch1)
+		begin
 				s_data = r_store_ch1;
-			2:
+				s_ch_target = 2'b01;
+		end
+		else if(r_send_ch2)
+		begin
 				s_data = r_store_ch2;
-			3:
+				s_ch_target = 2'b10;
+		end
+		else
+		begin
 				s_data = r_store_ch3;
-		endcase
+				s_ch_target = 2'b11;
+		end
 	end
 
-	assign s_data_valid = r_valid;
+	assign s_data_valid = r_send_ch0 | r_send_ch1 | r_send_ch2 | r_send_ch3;
 
 endmodule
