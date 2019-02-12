@@ -26,6 +26,8 @@ module i2s_txrx (
     input  logic                      dft_test_mode_i,
     input  logic                      dft_cg_enable_i,
 
+    input  logic                      pdm_clk_i,
+
     input  logic                      slave_clk_i,
     input  logic                      slave_ws_i,
 
@@ -109,7 +111,7 @@ module i2s_txrx (
     );
 
     pdm_top i_pdm (
-        .clk_i                ( slave_clk_i                ),
+        .clk_i                ( pdm_clk_i                  ),
         .rstn_i               ( rstn_i                     ),
         .pdm_clk_o            ( pad_pdm_clk_o              ),
         .cfg_pdm_ch_mode_i    ( cfg_slave_pdm_mode_i       ),

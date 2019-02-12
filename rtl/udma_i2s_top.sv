@@ -305,6 +305,7 @@ module udma_i2s_top
         .sel_slave_num_i   ( s_sel_slave_num      ),
         .sel_slave_ext_i   ( s_sel_slave_ext      ),
 
+        .clk_pdm_o         ( s_i2s_pdm_clk     ),
         .clk_master_o      ( s_i2s_master_clk     ),
         .ws_master_o       ( s_i2s_master_ws      ),
         .clk_slave_o       ( s_i2s_slave_clk      ),
@@ -318,6 +319,8 @@ module udma_i2s_top
 
         .dft_test_mode_i            ( dft_test_mode_i        ),
         .dft_cg_enable_i            ( dft_cg_enable_i        ),
+
+        .pdm_clk_i                  ( s_i2s_pdm_clk          ),
 
         .slave_clk_i                ( s_i2s_slave_clk        ),
         .slave_ws_i                 ( s_i2s_slave_ws         ),

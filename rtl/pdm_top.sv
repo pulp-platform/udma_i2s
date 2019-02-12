@@ -33,7 +33,6 @@ module pdm_top (
 	logic       r_data_ch1;
 	logic       r_data_ch2;
 	logic       r_data_ch3;
-	logic       r_valid;
 	logic       r_clk;
 	logic       r_clk_dly;
 

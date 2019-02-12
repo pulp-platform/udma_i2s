@@ -37,6 +37,7 @@ module i2s_clkws_gen (
                       input logic        sel_slave_num_i,
                       input logic        sel_slave_ext_i,
 
+                      output logic       clk_pdm_o,
                       output logic       clk_master_o,
                       output logic       clk_slave_o,
                       output logic       ws_master_o,
@@ -68,17 +69,17 @@ module i2s_clkws_gen (
    logic                   s_ws_master;
    logic                   s_ws_slave;
 
-   assign pad_slave_sck_oe = ~sel_slave_ext_i;
-   assign pad_slave_ws_oe  = ~sel_slave_ext_i;
-   assign pad_slave_ws_o   = s_ws_slave;
+   assign pad_slave_sck_oe = pdm_en_i ? 1'b1 : (slave_en_i & ~sel_slave_ext_i);
+   assign pad_slave_ws_oe  = pdm_en_i ? 1'b0 : (slave_en_i & ~sel_slave_ext_i);
+   assign pad_slave_ws_o   = pdm_en_i ? 1'b0 : s_ws_slave;
 
-   assign pad_master_sck_oe = ~sel_master_ext_i;
+   assign pad_master_sck_oe = master_en_i & ~sel_master_ext_i;
    assign pad_master_sck_o  = s_clk_master;
-   assign pad_master_ws_oe  = ~sel_master_ext_i;
+   assign pad_master_ws_oe  = master_en_i & ~sel_master_ext_i;
    assign pad_master_ws_o   = s_ws_master;
 
-   assign s_clk_gen_0_en = (master_en_i | slave_en_i) & ((~sel_master_num_i & ~sel_master_ext_i) | (~sel_slave_num_i & ~sel_slave_ext_i));
-   assign s_clk_gen_1_en = (master_en_i | slave_en_i) & (( sel_master_num_i & ~sel_master_ext_i) | ( sel_slave_num_i & ~sel_slave_ext_i));
+   assign s_clk_gen_0_en = pdm_en_i | ((master_en_i | slave_en_i) & ((~sel_master_num_i & ~sel_master_ext_i) | (~sel_slave_num_i & ~sel_slave_ext_i)));
+   assign s_clk_gen_1_en =             (master_en_i | slave_en_i) & (( sel_master_num_i & ~sel_master_ext_i) | ( sel_slave_num_i & ~sel_slave_ext_i));
 
    i2s_clk_gen i_clkgen0
      (
@@ -167,6 +168,14 @@ module i2s_clkws_gen (
    assign s_clk_master     = sel_master_ext_i ? s_clk_ext_master : s_clk_int_master;
    assign s_clk_slave      = sel_slave_ext_i  ? s_clk_ext_slave  : s_clk_int_slave;
 `endif
+
+   pulp_clock_gating i_pdm_cg
+     (
+      .clk_i(s_clk_gen_0),
+      .en_i(pdm_en_i),
+      .test_en_i(dft_cg_enable_i),
+      .clk_o(clk_pdm_o)
+      );
 
    pulp_clock_gating i_master_cg
      (
