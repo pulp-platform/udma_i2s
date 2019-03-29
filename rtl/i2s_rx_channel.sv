@@ -44,31 +44,34 @@ module i2s_rx_channel (
 );
 
 
-    logic  [1:0] r_ws_sync;
+    logic        r_ws_old;
     logic        s_ws_edge;
-    logic        s_ws_redge;
 
     logic [31:0] r_shiftreg_ch0;
     logic [31:0] r_shiftreg_ch1;
     logic [31:0] s_shiftreg_ch0;
     logic [31:0] s_shiftreg_ch1;
-    logic [31:0] r_shiftreg_shadow;
+    logic [31:0] r_shiftreg_ch0_shadow;
+    logic [31:0] r_shiftreg_ch1_shadow;
 
     logic [4:0]  r_count_bit;
-    logic [2:0]  r_count_word;
 
     logic        r_word_done_dly;
     logic        s_word_done;
 
     logic        r_started;
+    logic        r_started_dly;
 
-    assign s_ws_edge = r_ws_sync[1] ^ r_ws_sync[0]; 
+    logic        r_ch0_valid;
+    logic        r_ch1_valid;
+
+    assign s_ws_edge = i2s_ws_i ^ r_ws_old; 
 
     assign s_word_done = r_count_bit == cfg_wlen_i;
 
-    assign fifo_data_o = s_word_done ? s_shiftreg_ch0 : (r_word_done_dly ? r_shiftreg_shadow : 32'h0);
-    assign fifo_data_valid_o = s_word_done | (cfg_2ch_i & r_word_done_dly);
-    assign fifo_err_o = fifo_data_valid_o & ~fifo_data_ready_i;
+    assign fifo_data_o = r_ch0_valid ? r_shiftreg_ch0_shadow : (r_ch1_valid ? r_shiftreg_ch1_shadow : 32'h0);
+    assign fifo_data_valid_o = r_ch0_valid | r_ch1_valid;
+    assign fifo_err_o = (r_ch0_valid | r_ch1_valid) & ~fifo_data_ready_i & s_word_done;
 
     always_comb begin : proc_shiftreg
         s_shiftreg_ch0 = r_shiftreg_ch0;
@@ -93,23 +96,39 @@ module i2s_rx_channel (
         begin
             r_shiftreg_ch0  <=  'h0;
             r_shiftreg_ch1  <=  'h0;
+            r_shiftreg_ch0_shadow <= 'h0;
+            r_shiftreg_ch1_shadow <= 'h0;  
+            r_ch0_valid <= 1'b0;
+            r_ch1_valid <= 1'b0;
         end
         else
         begin
-            if(r_started)
+            if(r_started_dly)
             begin
                 r_shiftreg_ch0  <= s_shiftreg_ch0;
                 if(cfg_2ch_i)
-                begin
                     r_shiftreg_ch1  <= s_shiftreg_ch1;  
-                    if(s_word_done)
-                        r_shiftreg_shadow <= s_shiftreg_ch1;          
+                if(s_word_done)
+                begin
+                    r_shiftreg_ch0_shadow <= r_shiftreg_ch0;
+                    r_ch0_valid <= 1'b1;
+                    if(cfg_2ch_i)
+                    begin
+                        r_shiftreg_ch1_shadow <= r_shiftreg_ch1;
+                        r_ch1_valid <= 1'b1;
+                    end
                 end
             end
+            if(r_ch0_valid)
+                if(fifo_data_ready_i)
+                    r_ch0_valid <= 1'b0;
+            else if(r_ch1_valid)
+                if(fifo_data_ready_i)
+                    r_ch1_valid <= 1'b0;
         end
     end
 
-    always_ff  @(negedge sck_i, negedge rstn_i)
+    always_ff  @(posedge sck_i, negedge rstn_i)
     begin
         if (rstn_i == 1'b0)
         begin
@@ -117,7 +136,7 @@ module i2s_rx_channel (
         end
         else
         begin
-            if(r_started)
+            if(r_started_dly)
             begin
                 if (s_word_done)
                     r_count_bit <= 'h0;
@@ -127,7 +146,7 @@ module i2s_rx_channel (
         end
     end
 
-    always_ff  @(negedge sck_i, negedge rstn_i)
+    always_ff  @(posedge sck_i, negedge rstn_i)
     begin
         if (rstn_i == 1'b0)
         begin
@@ -135,21 +154,23 @@ module i2s_rx_channel (
         end
         else
         begin
-            if(r_started)
+            if(r_started_dly)
                 r_word_done_dly <= s_word_done;
         end
     end
 
-    always_ff  @(negedge sck_i, negedge rstn_i)
+    always_ff  @(posedge sck_i, negedge rstn_i)
     begin
         if (rstn_i == 1'b0)
         begin
-            r_ws_sync <= 'h0;
-            r_started <= 'h0;
+            r_ws_old <= 'h0;
+            r_started     <= 'h0;
+            r_started_dly <= 'h0;
         end
         else
         begin
-            r_ws_sync <= {r_ws_sync[0],i2s_ws_i};
+            r_ws_old <= i2s_ws_i;
+            r_started_dly <= r_started;
             if(s_ws_edge)
             begin
                 if(cfg_en_i)
