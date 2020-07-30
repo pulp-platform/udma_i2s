@@ -39,6 +39,7 @@ module cic_comb #(
 	logic       [WIDTH-1:0] s_sum;
 
 	assign s_sum = data_i - r_previousdata[sel_i];
+	assign data_o = r_data[sel_i];
 
 	always_ff @(posedge clk_i or negedge rstn_i)
 	begin

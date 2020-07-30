@@ -39,6 +39,8 @@ module cic_integrator #(
 	assign s_mux = r_accumulator[sel_i];
 	assign s_sum = s_mux + data_i;
 
+	assign data_o = s_mux;
+
 	always_ff @(posedge clk_i or negedge rstn_i)
 	begin
 		if (~rstn_i)
