@@ -1,0 +1,25 @@
+package:
+  name: udma_i2s
+  authors: 
+    - "Antonio Pullini <pullinia@iis.ee.ethz.ch>"
+    - "Jie Chen <jie.chen@greenwaves-technologies.com>"
+    - "Pasquale Davide Schiavone <pschiavo@iis.ee.ethz.ch>"
+
+dependencies:
+  udma_core: {path: "../udma_core"} # to be updated with git repo
+  tech_cells_generic: { git: "git@github.com:pulp-platform/tech_cells_generic.git", version: 0.1.6 }
+  common_cells: { git: "git@github.com:pulp-platform/common_cells.git", version: 1.13.1 }
+
+sources:
+  - rtl/i2s_clk_gen.sv
+  - rtl/i2s_rx_channel.sv
+  - rtl/i2s_tx_channel.sv
+  - rtl/i2s_ws_gen.sv
+  - rtl/i2s_clkws_gen.sv
+  - rtl/i2s_txrx.sv
+  - rtl/cic_top.sv
+  - rtl/cic_integrator.sv
+  - rtl/cic_comb.sv
+  - rtl/pdm_top.sv
+  - rtl/udma_i2s_reg_if.sv
+  - rtl/udma_i2s_top.sv
