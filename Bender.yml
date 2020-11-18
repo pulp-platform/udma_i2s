@@ -1,0 +1,33 @@
+package:
+  name: udma_i2s
+  authors: 
+    - "Antonio Pullini <pullinia@iis.ee.ethz.ch>"
+    - "Jie Chen <jie.chen@greenwaves-technologies.com>"
+    - "Pasquale Davide Schiavone <pschiavo@iis.ee.ethz.ch>"
+
+dependencies:
+  udma_core: { git: "git@github.com:pulp-platform/udma_core.git", version: 1.0.1 }
+  tech_cells_generic: { git: "git@github.com:pulp-platform/tech_cells_generic.git", version: 0.1.6 }
+  common_cells: { git: "git@github.com:pulp-platform/common_cells.git", version: 1.13.1 }
+
+sources:
+    # Source files grouped in levels. Files in level 0 have no dependencies on files in this
+    # package. Files in level 1 only depend on files in level 0, files in level 2 on files in
+    # levels 1 and 0, etc. Files within a level are ordered alphabetically.
+    # Level 0
+  - rtl/cic_comb.sv
+  - rtl/cic_integrator.sv
+  - rtl/i2s_clk_gen.sv
+  - rtl/i2s_rx_channel.sv
+  - rtl/i2s_tx_channel.sv
+  - rtl/i2s_ws_gen.sv
+  - rtl/udma_i2s_reg_if.sv
+    # Level 1
+  - rtl/cic_top.sv
+  - rtl/i2s_clkws_gen.sv
+    # Level 2
+  - rtl/pdm_top.sv
+    # Level 3
+  - rtl/i2s_txrx.sv
+    # Level 4
+  - rtl/udma_i2s_top.sv
