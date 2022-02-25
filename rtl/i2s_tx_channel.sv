@@ -35,7 +35,7 @@ module i2s_tx_channel (
     input  logic                    cfg_en_i, 
     input  logic                    cfg_2ch_i, 
     input  logic              [4:0] cfg_wlen_i, 
-    input  logic              [2:0] cfg_wnum_i, 
+    input  logic              [3:0] cfg_wnum_i, 
     input  logic                    cfg_lsb_first_i
 );
 
@@ -57,7 +57,7 @@ module i2s_tx_channel (
     logic        s_update_cnt;
 
     logic [4:0]  r_count_bit;
-    logic [2:0]  r_count_word;
+    logic [3:0]  r_count_word;
 
     logic        s_word_done;
 

@@ -28,11 +28,11 @@ module i2s_ws_gen
     output logic                    ws_o,
 
     input  logic              [4:0] cfg_data_size_i,
-    input  logic              [2:0] cfg_word_num_i
+    input  logic              [3:0] cfg_word_num_i
 );
 
     logic  [4:0] r_counter;
-    logic  [2:0] r_word_counter;
+    logic  [3:0] r_word_counter;
 
     //Generate the internal WS signal
     always_ff  @(posedge sck_i, negedge rstn_i)
