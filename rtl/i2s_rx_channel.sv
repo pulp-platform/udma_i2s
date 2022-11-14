@@ -119,12 +119,15 @@ module i2s_rx_channel (
                     end
                 end
             end
-            if(r_ch0_valid)
-                if(fifo_data_ready_i)
+            if(r_ch0_valid) begin
+                if(fifo_data_ready_i) begin
                     r_ch0_valid <= 1'b0;
-            else if(r_ch1_valid)
-                if(fifo_data_ready_i)
+                end
+            end else if(r_ch1_valid) begin
+                if(fifo_data_ready_i) begin
                     r_ch1_valid <= 1'b0;
+                end
+            end
         end
     end
 
