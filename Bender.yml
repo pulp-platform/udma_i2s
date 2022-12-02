@@ -15,6 +15,7 @@ sources:
     # package. Files in level 1 only depend on files in level 0, files in level 2 on files in
     # levels 1 and 0, etc. Files within a level are ordered alphabetically.
     # Level 0
+  - rtl/i2s_pkg.sv
   - rtl/cic_comb.sv
   - rtl/cic_integrator.sv
   - rtl/i2s_clk_gen.sv
