@@ -16,25 +16,25 @@
 package i2s_pkg;
   // i2s structure
 	typedef struct packed {
-    logic        master_sd0;
-    logic        master_sd1;
-    logic        master_sck;
+    logic        master_sd0_out;
+    logic        master_sd1_out;
+    logic        master_sck_out;
     logic        master_sck_oe;
-    logic        master_ws;
+    logic        master_ws_out;
     logic        master_ws_oe;
 
-    logic        slave_sck;
+    logic        slave_sck_out;
     logic        slave_sck_oe;
-    logic        slave_ws;
+    logic        slave_ws_out;
     logic        slave_ws_oe;
 	} i2s_to_pad_t;
 	typedef struct packed {
-    logic        master_sck;
-    logic        master_ws;
+    logic        master_sck_in;
+    logic        master_ws_in;
 
-    logic        slave_sd0;
-    logic        slave_sd1;
-    logic        slave_sck;
-    logic        slave_ws;
+    logic        slave_sd0_in;
+    logic        slave_sd1_in;
+    logic        slave_sck_in;
+    logic        slave_ws_in;
 	} pad_to_i2s_t;
 endpackage
