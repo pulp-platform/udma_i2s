@@ -39,7 +39,7 @@ module i2s_rx_channel (
     input  logic                    cfg_en_i, 
     input  logic                    cfg_2ch_i, 
     input  logic              [4:0] cfg_wlen_i, 
-    input  logic              [2:0] cfg_wnum_i, 
+    input  logic              [3:0] cfg_wnum_i, 
     input  logic                    cfg_lsb_first_i
 );
 

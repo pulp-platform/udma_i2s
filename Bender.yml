@@ -18,9 +18,12 @@ sources:
   - rtl/cic_comb.sv
   - rtl/cic_integrator.sv
   - rtl/i2s_clk_gen.sv
+  - rtl/i2s_rx_dsp_channel.sv
   - rtl/i2s_rx_channel.sv
+  - rtl/i2s_tx_dsp_channel.sv
   - rtl/i2s_tx_channel.sv
   - rtl/i2s_ws_gen.sv
+  - rtl/i2s_dsp_ws_gen.sv
   - rtl/udma_i2s_reg_if.sv
     # Level 1
   - rtl/cic_top.sv
