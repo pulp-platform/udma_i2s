@@ -60,8 +60,12 @@ module i2s_tx_channel (
     logic [3:0]  r_count_word;
 
     logic        s_word_done;
+    logic        s_word_done_pre;
 
     logic        r_started;
+
+    logic        s_i2s_ch0;
+    logic        s_i2s_ch1;
 
     enum logic [1:0] {ST_START,ST_SAMPLE,ST_WAIT,ST_RUNNING} r_state,s_state;
 

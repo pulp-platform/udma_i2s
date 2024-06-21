@@ -200,11 +200,13 @@ module udma_i2s_reg_if #(
     logic                      s_update_clk;
     logic                      r_update_clk;
 
+    logic                      s_update;
+
     assign s_wr_addr = (cfg_valid_i & ~cfg_rwn_i) ? cfg_addr_i : 5'h0;
     assign s_rd_addr = (cfg_valid_i &  cfg_rwn_i) ? cfg_addr_i : 5'h0;
 
     assign s_update_clk     = (cfg_valid_i & ~cfg_rwn_i) & (s_wr_addr == `REG_I2S_CLKCFG_SETUP);
-    assign cfg_update_clk_o = r_update_clk;
+    // assign cfg_update_clk_o = r_update_clk;
 
     //DSP reg slave
     assign cfg_slave_dsp_en_o            = r_slave_dsp_en;

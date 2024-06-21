@@ -135,6 +135,21 @@ module udma_i2s_top
     logic               [15:0] s_master_gen_clk_div;
     logic                      s_master_ready_to_send;
 
+    logic                      s_master_clk_en;
+    logic                      s_slave_clk_en;
+    logic                      s_pdm_clk_en;
+    logic                      s_slave_i2s_en;
+    logic                      s_slave_i2s_2ch;
+    logic                      s_slave_pdm_en;
+    logic                      s_master_i2s_en;
+    logic                      s_master_i2s_2ch;
+    logic                      s_i2s_master_clk;
+    logic                      s_i2s_slave_clk;
+    logic                      s_i2s_pdm_clk;
+    logic                      s_pdm_clk;
+    logic                      s_i2s_master_ws;
+    logic                      s_i2s_slave_ws;
+
 
     logic               [31:0] s_fifo_data;
     logic                      s_fifo_valid;
